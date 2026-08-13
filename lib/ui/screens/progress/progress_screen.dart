@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/db/database.dart';
-import '../../../core/db/tables.dart';
 import '../../../state/providers.dart';
+import '../../widgets/widgets.dart';
 import '../tests/tests_screen.dart';
 
 class ProgressScreen extends ConsumerStatefulWidget {
@@ -14,8 +13,6 @@ class ProgressScreen extends ConsumerStatefulWidget {
 }
 
 class _ProgressScreenState extends ConsumerState<ProgressScreen> {
-  final Set<int> _expanded = {};
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -39,7 +36,16 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            _buildSubjectCards(theme),
+            const SectionTitle('Subjects & Chapters'),
+            const SizedBox(height: 4),
+            Text(
+              'Tap a subject to tick off the chapters you have learned.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const ChapterChecklist(),
             const SizedBox(height: 16),
             Card(
               margin: EdgeInsets.zero,
@@ -72,127 +78,6 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildSubjectCards(ThemeData theme) {
-    final subjects = ref.watch(subjectsProvider).valueOrNull ?? const [];
-    final chapters =
-        ref.watch(chaptersBySubjectProvider).valueOrNull ?? const {};
-    final counts = ref.watch(chapterProgressProvider).valueOrNull ?? const {};
-    final repo = ref.read(progressRepositoryProvider);
-
-    return Column(
-      children: [
-        for (final s in subjects)
-          Builder(
-            builder: (context) {
-              final c = counts[s.id];
-              final total = c?.$1 ?? 0;
-              final learned = c?.$2 ?? 0;
-              final pct = total == 0 ? 0.0 : learned / total;
-              final expanded = _expanded.contains(s.id);
-              final list = chapters[s.id] ?? const <Chapter>[];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                clipBehavior: Clip.antiAlias,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    InkWell(
-                      onTap: () => setState(() {
-                        if (!_expanded.add(s.id)) _expanded.remove(s.id);
-                      }),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  s.name,
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  '${(pct * 100).round()}%',
-                                  style: theme.textTheme.labelLarge?.copyWith(
-                                    color: Color(s.colorValue),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value: pct,
-                                minHeight: 8,
-                                backgroundColor:
-                                    theme.colorScheme.surfaceContainerHighest,
-                                color: Color(s.colorValue),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  '$learned of $total chapters learned',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                                Icon(
-                                  expanded
-                                      ? Icons.expand_less
-                                      : Icons.expand_more,
-                                  size: 18,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    if (expanded)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                        child: Column(
-                          children: [
-                            for (final ch in list)
-                              CheckboxListTile(
-                                dense: true,
-                                value: ch.status == ChapterStatus.learned,
-                                controlAffinity:
-                                    ListTileControlAffinity.leading,
-                                activeColor: Color(s.colorValue),
-                                title: Text(
-                                  ch.name,
-                                  style: theme.textTheme.bodySmall,
-                                ),
-                                onChanged: (checked) {
-                                  repo.setChapterStatus(
-                                    ch,
-                                    checked!
-                                        ? ChapterStatus.learned
-                                        : ChapterStatus.todo,
-                                  );
-                                },
-                              ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              );
-            },
-          ),
-      ],
     );
   }
 

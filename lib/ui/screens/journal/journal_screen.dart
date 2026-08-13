@@ -6,6 +6,7 @@ import '../../../core/db/database.dart';
 import '../../../core/db/tables.dart';
 import '../../../core/utils/dates.dart';
 import '../../../state/providers.dart';
+import '../../widgets/widgets.dart';
 
 class JournalScreen extends ConsumerWidget {
   const JournalScreen({super.key});
@@ -75,6 +76,8 @@ class _TodayEntryForm extends ConsumerStatefulWidget {
 
 class _TodayEntryFormState extends ConsumerState<_TodayEntryForm> {
   late final TextEditingController _learned;
+  late final TextEditingController _pending;
+  DateTime _pendingDue = DateTime.now();
   JournalMood? _mood;
   bool _saving = false;
 
@@ -82,13 +85,41 @@ class _TodayEntryFormState extends ConsumerState<_TodayEntryForm> {
   void initState() {
     super.initState();
     _learned = TextEditingController(text: widget.entry?.learnedText ?? '');
+    _pending = TextEditingController();
     _mood = widget.entry?.mood;
   }
 
   @override
   void dispose() {
     _learned.dispose();
+    _pending.dispose();
     super.dispose();
+  }
+
+  Future<void> _addPending() async {
+    final text = _pending.text.trim();
+    if (text.isEmpty) return;
+    await ref
+        .read(pendingRepositoryProvider)
+        .add(
+          subjectId: null,
+          description: text,
+          dueDate: _pendingDue,
+          source: 'journal',
+        );
+    if (!mounted) return;
+    _pending.clear();
+    setState(() {});
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Added to pending')));
+  }
+
+  bool _dueIn(int days) {
+    final a = DateTime(_pendingDue.year, _pendingDue.month, _pendingDue.day);
+    final target = DateTime.now().add(Duration(days: days));
+    final b = DateTime(target.year, target.month, target.day);
+    return a.isAtSameMomentAs(b);
   }
 
   @override
@@ -157,7 +188,50 @@ class _TodayEntryFormState extends ConsumerState<_TodayEntryForm> {
           ),
         ),
         const SizedBox(height: 20),
-        Text('What is pending?', style: theme.textTheme.titleSmall),
+        const SectionTitle('What is pending?'),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _pending,
+          decoration: const InputDecoration(
+            labelText: 'Add something pending...',
+            hintText: 'e.g. 20 PYQs from Electrostatics',
+            prefixIcon: Icon(Icons.flag_outlined),
+          ),
+          onSubmitted: (_) => _addPending(),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          children: [
+            for (final (label, days) in const [
+              ('Today', 0),
+              ('Tomorrow', 1),
+              ('This week', 7),
+            ])
+              ChoiceChip(
+                label: Text(label),
+                selected: _dueIn(days),
+                onSelected: (_) => setState(() {
+                  _pendingDue = DateTime.now().add(Duration(days: days));
+                }),
+              ),
+            IconButton(
+              tooltip: 'Pick a date',
+              onPressed: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: _pendingDue,
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                );
+                if (date != null && mounted) {
+                  setState(() => _pendingDue = date);
+                }
+              },
+              icon: const Icon(Icons.calendar_today_outlined, size: 20),
+            ),
+          ],
+        ),
         const SizedBox(height: 8),
         Card(
           margin: EdgeInsets.zero,
@@ -213,6 +287,17 @@ class _TodayEntryFormState extends ConsumerState<_TodayEntryForm> {
                 ),
           ),
         ),
+        const SizedBox(height: 20),
+        const SectionTitle('Chapters completed'),
+        const SizedBox(height: 4),
+        Text(
+          'Tick off chapters you finished. This feeds your progress stats.',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ChapterChecklist(),
         const SizedBox(height: 20),
         Text('How was today?', style: theme.textTheme.titleSmall),
         const SizedBox(height: 8),

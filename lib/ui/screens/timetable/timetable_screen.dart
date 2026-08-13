@@ -231,13 +231,24 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              SegmentedButton<int>(
-                segments: [
-                  for (var i = 0; i < 7; i++)
-                    ButtonSegment(value: i + 1, label: Text(_dayNames[i])),
-                ],
-                selected: {_day},
-                onSelectionChanged: (s) => _selectDay(s.first),
+              SizedBox(
+                height: 46,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 7,
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
+                  itemBuilder: (context, i) {
+                    final day = i + 1;
+                    final selected = _day == day;
+                    final isToday = day == DateTime.now().weekday;
+                    return _DayPill(
+                      label: _dayNames[i],
+                      selected: selected,
+                      isToday: isToday,
+                      onTap: () => _selectDay(day),
+                    );
+                  },
+                ),
               ),
               if (_editMode) ...[
                 const SizedBox(height: 12),
@@ -296,6 +307,70 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
                   ),
                 ],
               ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DayPill extends StatelessWidget {
+  const _DayPill({
+    required this.label,
+    required this.selected,
+    required this.isToday,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final bool isToday;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final fg = selected ? scheme.onPrimary : scheme.onSurface;
+    final bg = selected
+        ? scheme.primary
+        : isToday
+        ? scheme.primaryContainer
+        : scheme.surfaceContainerHigh;
+
+    return Material(
+      color: bg,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: SizedBox(
+          width: 48,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: fg,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 4,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: selected
+                      ? scheme.onPrimary
+                      : isToday
+                      ? scheme.primary
+                      : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+              ),
             ],
           ),
         ),

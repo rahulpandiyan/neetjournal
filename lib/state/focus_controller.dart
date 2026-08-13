@@ -239,7 +239,11 @@ class FocusController extends Notifier<FocusState> {
   }
 
   /// "I'm tired" → end the session immediately (completion flow follows).
-  void endTired() {
+  void endTired() => endSession();
+
+  /// End the session right now (early-stop or "I'm tired"). The completion
+  /// flow follows and records the actual outcome.
+  void endSession() {
     final s = state;
     if (s.phase != FocusPhase.focusing && s.phase != FocusPhase.paused) return;
     _stopTicker();
