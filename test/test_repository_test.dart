@@ -51,11 +51,11 @@ void main() {
         chemistryScore: 100,
         biologyScore: 200,
       );
-    await repo.addMistake(
-      testId: testId,
-      category: MistakeCategory.silly,
-      description: 'Misread unit',
-    );
+      await repo.addMistake(
+        testId: testId,
+        category: MistakeCategory.silly,
+        description: 'Misread unit',
+      );
 
       final mistake = (await repo.watchMistakes(testId).first).first;
       expect(mistake.isRevisioned, isFalse);

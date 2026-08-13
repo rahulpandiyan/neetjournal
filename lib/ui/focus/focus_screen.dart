@@ -188,6 +188,30 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
+                    if (phase == FocusPhase.focusing &&
+                        remaining.isNegative) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0x1AFFFFFF),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: const Color(0x33FFF59D)),
+                        ),
+                        child: const Text(
+                          "You've been studying too long. "
+                          'Your timetable planned a break now.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color(0xFFFFF59D),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 48),
                     if (phase == FocusPhase.focusing ||
                         phase == FocusPhase.paused) ...[

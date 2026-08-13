@@ -658,5 +658,6 @@ class _PendingCard extends ConsumerWidget {
         await repo.setStatus(task.id, PendingStatus.skipped);
         break;
     }
+    await syncNotifications(ref);
   }
 }

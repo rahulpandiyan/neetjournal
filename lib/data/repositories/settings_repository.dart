@@ -1,4 +1,5 @@
 import '../../core/db/database.dart';
+import '../../core/services/notifications_service.dart';
 import '../../core/utils/dates.dart';
 
 class SettingsRepository {
@@ -64,22 +65,40 @@ class SettingsRepository {
     await _db.setSetting('waterReminderMinutes', '$minutes');
   }
 
-  Stream<({bool study, bool sleep})> watchNotificationPrefs() {
+  Stream<NotificationPrefs> watchNotificationPrefs() {
     return _db.select(_db.appSettings).watch().map((rows) {
       final byKey = {for (final r in rows) r.key: r.value};
       return (
         study: (byKey['studyRemindersEnabled'] ?? '1') == '1',
+        rest: (byKey['restRemindersEnabled'] ?? '1') == '1',
+        revision: (byKey['revisionRemindersEnabled'] ?? '1') == '1',
         sleep: (byKey['sleepReminderEnabled'] ?? '1') == '1',
+        morning: (byKey['morningReminderEnabled'] ?? '1') == '1',
       );
     });
   }
 
-  Future<void> setNotificationPrefs({bool? study, bool? sleep}) async {
+  Future<void> setNotificationPrefs({
+    bool? study,
+    bool? rest,
+    bool? revision,
+    bool? sleep,
+    bool? morning,
+  }) async {
     if (study != null) {
       await _db.setSetting('studyRemindersEnabled', study ? '1' : '0');
     }
+    if (rest != null) {
+      await _db.setSetting('restRemindersEnabled', rest ? '1' : '0');
+    }
+    if (revision != null) {
+      await _db.setSetting('revisionRemindersEnabled', revision ? '1' : '0');
+    }
     if (sleep != null) {
       await _db.setSetting('sleepReminderEnabled', sleep ? '1' : '0');
+    }
+    if (morning != null) {
+      await _db.setSetting('morningReminderEnabled', morning ? '1' : '0');
     }
   }
 

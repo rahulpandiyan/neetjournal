@@ -183,6 +183,22 @@ class AppDatabase extends _$AppDatabase {
       mode: InsertMode.insertOrIgnore,
     );
     await into(appSettings).insert(
+      AppSettingsCompanion.insert(key: 'studyRemindersEnabled', value: '1'),
+      mode: InsertMode.insertOrIgnore,
+    );
+    await into(appSettings).insert(
+      AppSettingsCompanion.insert(key: 'restRemindersEnabled', value: '1'),
+      mode: InsertMode.insertOrIgnore,
+    );
+    await into(appSettings).insert(
+      AppSettingsCompanion.insert(key: 'revisionRemindersEnabled', value: '1'),
+      mode: InsertMode.insertOrIgnore,
+    );
+    await into(appSettings).insert(
+      AppSettingsCompanion.insert(key: 'morningReminderEnabled', value: '1'),
+      mode: InsertMode.insertOrIgnore,
+    );
+    await into(appSettings).insert(
       AppSettingsCompanion.insert(key: 'sleepReminderEnabled', value: '1'),
       mode: InsertMode.insertOrIgnore,
     );

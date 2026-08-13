@@ -294,10 +294,48 @@ class _NotificationsTile extends ConsumerWidget {
             SwitchListTile(
               secondary: const Icon(Icons.schedule_outlined),
               title: const Text('Study reminders'),
-              subtitle: const Text('A nudge when each study slot starts'),
+              subtitle: const Text(
+                'A nudge before and when each study slot starts',
+              ),
               value: prefs.study,
               onChanged: (v) async {
                 await repo.setNotificationPrefs(study: v);
+                await syncNotifications(ref);
+              },
+            ),
+            SwitchListTile(
+              secondary: const Icon(Icons.self_improvement_outlined),
+              title: const Text('Rest reminders'),
+              subtitle: const Text(
+                '“Session complete. Take a break” at the end of each slot',
+              ),
+              value: prefs.rest,
+              onChanged: (v) async {
+                await repo.setNotificationPrefs(rest: v);
+                await syncNotifications(ref);
+              },
+            ),
+            SwitchListTile(
+              secondary: const Icon(Icons.autorenew_outlined),
+              title: const Text('Revision reminders'),
+              subtitle: const Text(
+                'A reminder when a revision task is due today',
+              ),
+              value: prefs.revision,
+              onChanged: (v) async {
+                await repo.setNotificationPrefs(revision: v);
+                await syncNotifications(ref);
+              },
+            ),
+            SwitchListTile(
+              secondary: const Icon(Icons.wb_sunny_outlined),
+              title: const Text('Morning greeting'),
+              subtitle: const Text(
+                'Good morning + days left to NEET, at wake-up',
+              ),
+              value: prefs.morning,
+              onChanged: (v) async {
+                await repo.setNotificationPrefs(morning: v);
                 await syncNotifications(ref);
               },
             ),

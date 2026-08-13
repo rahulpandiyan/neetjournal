@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/db/database.dart';
 import '../core/db/tables.dart';
 import '../core/services/notifications_service.dart';
+import '../core/utils/dates.dart';
 import '../data/repositories/journal_repository.dart';
 import '../data/repositories/pending_repository.dart';
 import '../data/repositories/progress_repository.dart';
@@ -52,22 +53,29 @@ final notificationsServiceProvider = Provider<NotificationsService>(
   (ref) => NotificationsService.instance,
 );
 
-final notificationPrefsProvider = StreamProvider<({bool study, bool sleep})>((
-  ref,
-) {
+final notificationPrefsProvider = StreamProvider<NotificationPrefs>((ref) {
   return ref.watch(settingsRepositoryProvider).watchNotificationPrefs();
 });
 
-/// Rebuilds scheduled notifications from the weekly template + prefs.
+/// Rebuilds scheduled notifications from the weekly template + prefs, plus
+/// one-shot revision reminders for revision tasks due today.
 Future<void> syncNotifications(WidgetRef ref) async {
   final service = ref.read(notificationsServiceProvider);
   final template = await ref.read(templateByDayProvider.future);
   final prefs = await ref.read(notificationPrefsProvider.future);
+  final exam = await ref.read(examDateProvider.future);
+  final tasks = await ref.read(pendingRepositoryProvider).allPending();
+  final today = dateToStr(DateTime.now());
+  final dueToday = tasks
+      .where((t) => t.source == 'revision' && t.dueDate == today)
+      .toList();
+
   await service.rescheduleFromTemplate(
     template: template,
-    studyReminders: prefs.study,
-    sleepReminder: prefs.sleep,
+    prefs: prefs,
+    examDate: exam,
   );
+  await service.scheduleRevisionReminders(dueToday);
 }
 
 final subjectsByIdProvider = FutureProvider<Map<int, Subject>>((ref) async {

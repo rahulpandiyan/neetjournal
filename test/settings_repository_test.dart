@@ -26,7 +26,29 @@ void main() {
     await repo.setBadDay(today, true);
 
     expect(await repo.badDay(today), isTrue);
-    expect(await repo.badDay(tomorrow), isFalse,
-        reason: 'bad day should not leak into the next day');
+    expect(
+      await repo.badDay(tomorrow),
+      isFalse,
+      reason: 'bad day should not leak into the next day',
+    );
+  });
+
+  test('notification toggles default on and persist per category', () async {
+    final prefs = await repo.watchNotificationPrefs().first;
+
+    expect(prefs.study, isTrue);
+    expect(prefs.rest, isTrue);
+    expect(prefs.revision, isTrue);
+    expect(prefs.sleep, isTrue);
+    expect(prefs.morning, isTrue);
+
+    await repo.setNotificationPrefs(rest: false, revision: false);
+
+    final updated = await repo.watchNotificationPrefs().first;
+    expect(updated.study, isTrue);
+    expect(updated.rest, isFalse);
+    expect(updated.revision, isFalse);
+    expect(updated.sleep, isTrue);
+    expect(updated.morning, isTrue);
   });
 }
