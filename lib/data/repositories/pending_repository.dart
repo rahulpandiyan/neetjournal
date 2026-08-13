@@ -39,6 +39,13 @@ class PendingRepository {
         .get();
   }
 
+  Stream<List<PendingTask>> watchAllPending() {
+    return (_db.select(_db.pendingTasks)
+          ..where((t) => t.status.equalsValue(PendingStatus.pending))
+          ..orderBy([(t) => OrderingTerm.asc(t.dueDate)]))
+        .watch();
+  }
+
   Future<int> add({
     int? subjectId,
     required String description,

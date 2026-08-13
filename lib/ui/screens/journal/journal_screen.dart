@@ -15,7 +15,7 @@ class JournalScreen extends ConsumerWidget {
     return Scaffold(
       body: SafeArea(
         child: DefaultTabController(
-          length: 2,
+          length: 3,
           child: Column(
             children: [
               Padding(
@@ -34,10 +34,13 @@ class JournalScreen extends ConsumerWidget {
                 tabs: [
                   Tab(text: "Today's Entry"),
                   Tab(text: 'History'),
+                  Tab(text: 'Pending'),
                 ],
               ),
               const Expanded(
-                child: TabBarView(children: [_TodayEntry(), _History()]),
+                child: TabBarView(
+                  children: [_TodayEntry(), _History(), _PendingTab()],
+                ),
               ),
             ],
           ),
@@ -154,6 +157,63 @@ class _TodayEntryFormState extends ConsumerState<_TodayEntryForm> {
           ),
         ),
         const SizedBox(height: 20),
+        Text('What is pending?', style: theme.textTheme.titleSmall),
+        const SizedBox(height: 8),
+        Card(
+          margin: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: ref
+                .watch(openPendingProvider)
+                .when(
+                  loading: () => const LinearProgressIndicator(),
+                  error: (e, _) => Text('$e'),
+                  data: (open) {
+                    if (open.isEmpty) {
+                      return Text(
+                        'Nothing pending. Clear head. 😌',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      );
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (final p in open.take(5))
+                          ListTile(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            leading: Icon(
+                              Icons.pending_outlined,
+                              size: 20,
+                              color: theme.colorScheme.tertiary,
+                            ),
+                            title: Text(p.description),
+                            subtitle: Text(
+                              dueLabel(p.dueDate),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: _dueColor(context, p.dueDate),
+                              ),
+                            ),
+                          ),
+                        if (open.length > 5)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              '${open.length - 5} more — see the Pending tab',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+          ),
+        ),
+        const SizedBox(height: 20),
         Text('How was today?', style: theme.textTheme.titleSmall),
         const SizedBox(height: 8),
         Wrap(
@@ -245,6 +305,100 @@ class _History extends ConsumerWidget {
         );
       },
     );
+  }
+}
+
+String dueLabel(String dueDate) {
+  final d = strToDate(dueDate);
+  final today = DateTime.now();
+  final diff = daysUntil(today, d);
+  if (diff < 0) return 'Overdue by ${-diff} day${diff == -1 ? '' : 's'}';
+  if (diff == 0) return 'Due today';
+  if (diff == 1) return 'Due tomorrow';
+  return 'Due ${DateFormat('d MMM').format(d)}';
+}
+
+Color _dueColor(BuildContext context, String dueDate) {
+  final diff = daysUntil(DateTime.now(), strToDate(dueDate));
+  if (diff < 0) return Theme.of(context).colorScheme.error;
+  if (diff == 0) return Theme.of(context).colorScheme.tertiary;
+  return Theme.of(context).colorScheme.onSurfaceVariant;
+}
+
+class _PendingTab extends ConsumerWidget {
+  const _PendingTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final pendingAsync = ref.watch(allPendingProvider);
+    final subjects = ref.watch(subjectsByIdProvider).valueOrNull;
+
+    return pendingAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('$e')),
+      data: (tasks) {
+        if (tasks.isEmpty) {
+          return const Center(child: Text('No pending tasks. Nice.'));
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: tasks.length,
+          itemBuilder: (context, i) {
+            final t = tasks[i];
+            final diff = daysUntil(DateTime.now(), strToDate(t.dueDate));
+            final overdue = diff < 0;
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: Icon(
+                  overdue
+                      ? Icons.error_outline
+                      : diff == 0
+                      ? Icons.circle
+                      : Icons.schedule,
+                  color: overdue
+                      ? theme.colorScheme.error
+                      : theme.colorScheme.tertiary,
+                ),
+                title: Text(t.description),
+                subtitle: t.subjectId != null
+                    ? Text(
+                        '${subjects?[t.subjectId]?.name ?? ''} · ${dueLabel(t.dueDate)}',
+                      )
+                    : Text(dueLabel(t.dueDate)),
+                trailing: PopupMenuButton<String>(
+                  onSelected: (action) => _handle(ref, action, t),
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(value: 'today', child: Text('Do Today')),
+                    PopupMenuItem(
+                      value: 'tomorrow',
+                      child: Text('Move to Tomorrow'),
+                    ),
+                    PopupMenuItem(value: 'skip', child: Text('Skip')),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _handle(WidgetRef ref, String action, PendingTask task) async {
+    final repo = ref.read(pendingRepositoryProvider);
+    switch (action) {
+      case 'today':
+        await repo.moveTo(task.id, DateTime.now());
+        break;
+      case 'tomorrow':
+        await repo.moveTo(task.id, DateTime.now().add(const Duration(days: 1)));
+        break;
+      case 'skip':
+        await repo.setStatus(task.id, PendingStatus.skipped);
+        break;
+    }
   }
 }
 

@@ -89,4 +89,15 @@ class SettingsRepository {
 
   Future<void> setPreset(String preset) =>
       _db.setSetting('focusPreset', preset);
+
+  /// "Bad day mode" is scoped to a single day so it auto-expires on the next
+  /// day's first write/tick.
+  String badDayKey(DateTime day) => 'badDayMode:${dateToStr(day)}';
+
+  Future<bool> badDay(DateTime day) async {
+    return (await _db.getSetting(badDayKey(day))) == '1';
+  }
+
+  Future<void> setBadDay(DateTime day, bool on) =>
+      _db.setSetting(badDayKey(day), on ? '1' : '0');
 }

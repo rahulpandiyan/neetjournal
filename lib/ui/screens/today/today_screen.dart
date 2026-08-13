@@ -53,8 +53,15 @@ class TodayScreen extends ConsumerWidget {
                         const SizedBox(height: 16),
                         CountdownCard(daysLeft: data.daysLeft),
                         const SizedBox(height: 16),
-                        if (missed.isNotEmpty) _MissedCard(slots: missed),
-                        if (missed.isNotEmpty) const SizedBox(height: 16),
+                        _BadDayToggle(active: data.badDay, now: data.now),
+                        if (data.badDay) ...[
+                          const SizedBox(height: 16),
+                          _BadDayCard(subjectIds: studySubjectIds(data.slots)),
+                        ],
+                        if (missed.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          _MissedCard(slots: missed),
+                        ],
                         if (data.pending.isNotEmpty)
                           _PendingCard(pending: data.pending),
                         if (data.pending.isNotEmpty) const SizedBox(height: 16),
@@ -219,6 +226,105 @@ class _NowCard extends ConsumerWidget {
       subjectName,
       durations.$1,
       durations.$2,
+    );
+  }
+}
+
+class _BadDayToggle extends ConsumerWidget {
+  const _BadDayToggle({required this.active, required this.now});
+
+  final bool active;
+  final DateTime now;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: EdgeInsets.zero,
+      child: SwitchListTile(
+        secondary: Icon(
+          Icons.sentiment_dissatisfied_outlined,
+          color: theme.colorScheme.tertiary,
+        ),
+        title: const Text("I'm having a bad day"),
+        subtitle: const Text('Reduce today to a 30-minute minimum per subject'),
+        value: active,
+        onChanged: (v) =>
+            ref.read(settingsRepositoryProvider).setBadDay(now, v),
+      ),
+    );
+  }
+}
+
+Set<int> studySubjectIds(List<TimetableSlot> slots) => slots
+    .where((s) => s.activityType.isStudyLike && s.subjectId != null)
+    .map((s) => s.subjectId!)
+    .toSet();
+
+class _BadDayCard extends ConsumerWidget {
+  const _BadDayCard({required this.subjectIds});
+
+  final Set<int> subjectIds;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final subjects = ref.watch(subjectsByIdProvider).valueOrNull;
+    final names = [
+      for (final id in subjectIds) subjects?[id]?.name,
+    ].whereType<String>().toList();
+    final onColor = theme.colorScheme.onTertiaryContainer;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      color: theme.colorScheme.tertiaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "TODAY'S MINIMUM",
+              style: theme.textTheme.labelLarge?.copyWith(
+                letterSpacing: 1.5,
+                color: onColor,
+              ),
+            ),
+            const SizedBox(height: 10),
+            if (names.isEmpty)
+              Text(
+                'No study sessions today — rest up.',
+                style: theme.textTheme.bodyMedium?.copyWith(color: onColor),
+              )
+            else
+              for (final name in names)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    '• $name — 30 min',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: onColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            const SizedBox(height: 8),
+            Text(
+              'Everything else can move.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: onColor,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "Don't try to recover everything tonight. "
+              'Do what you can and reset tomorrow.',
+              style: theme.textTheme.bodySmall?.copyWith(color: onColor),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

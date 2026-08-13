@@ -12,6 +12,7 @@ class TodayData {
     required this.pending,
     required this.daysLeft,
     required this.examDate,
+    required this.badDay,
   });
 
   final DateTime now;
@@ -20,6 +21,9 @@ class TodayData {
   final List<PendingTask> pending;
   final int daysLeft;
   final DateTime examDate;
+
+  /// "I'm having a bad day" — today's workload is reduced to minimums.
+  final bool badDay;
 }
 
 final todayProvider = StreamProvider<TodayData>((ref) {
@@ -37,6 +41,7 @@ final todayProvider = StreamProvider<TodayData>((ref) {
     final done = await sessions.sessionsForDayBySlot(now);
     final openPending = await pending.openDueOnOrBefore(now);
     final exam = await settings.examDate();
+    final badDay = await settings.badDay(now);
     return TodayData(
       now: now,
       slots: slots,
@@ -44,6 +49,7 @@ final todayProvider = StreamProvider<TodayData>((ref) {
       pending: openPending,
       daysLeft: daysUntil(now, exam),
       examDate: exam,
+      badDay: badDay,
     );
   });
 });

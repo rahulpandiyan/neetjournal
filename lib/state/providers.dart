@@ -172,6 +172,18 @@ final journalHistoryProvider = FutureProvider<List<JournalEntry>>((ref) {
   return ref.watch(journalRepositoryProvider).history();
 });
 
+/// Open pending tasks due today or overdue (used by Today + Journal).
+final openPendingProvider = StreamProvider<List<PendingTask>>((ref) {
+  return ref
+      .watch(pendingRepositoryProvider)
+      .watchOpenDueOnOrBefore(DateTime.now());
+});
+
+/// All open pending tasks, including future-dated revision tasks.
+final allPendingProvider = StreamProvider<List<PendingTask>>((ref) {
+  return ref.watch(pendingRepositoryProvider).watchAllPending();
+});
+
 final todaySessionsProvider = StreamProvider<List<StudySession>>((ref) {
   final repo = ref.watch(sessionRepositoryProvider);
   return repo.watchSessionsBetween(DateTime.now(), DateTime.now());
