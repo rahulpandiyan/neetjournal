@@ -2,52 +2,87 @@ import 'package:flutter/material.dart';
 
 /// NEET Journal design language (locked).
 ///
-/// Direction: technical / utilitarian — a disciplined study cockpit.
-/// - Seed: deep "lab" teal (biology / medicine DNA).
-/// - Accent: warm amber = energy, streaks, "now" moments.
-/// - Neutrals: green-tinted paper (light) / green-ink (dark), never pure grey.
+/// Direction: "Serene Focus" — calm, focused, encouraging, natural.
+/// - Primary: Forest green (#2E7D32) — growth and progress.
+/// - Secondary: Sage green (#66BB6A) — softer, supporting touch.
+/// - Accent: Goldenrod (#FFC107) — countdown, alerts, energy moments.
+/// - Neutrals: light gray / white smoke surfaces, charcoal text.
+/// - Dark mode: #1E1E1E background, #2C2C2C surfaces, #E0E0E0 text.
 /// - Signature: rounded-20 cards, pill tab indicator, hairline dividers,
 ///   tabular numerals wherever numbers matter.
 class AppTheme {
-  static const seed = Color(0xFF00696E);
-
   static ThemeData light() => _base(_scheme(Brightness.light));
 
   static ThemeData dark() => _base(_scheme(Brightness.dark));
 
   static ColorScheme _scheme(Brightness b) {
-    final base = ColorScheme.fromSeed(seedColor: seed, brightness: b);
     if (b == Brightness.light) {
-      return base.copyWith(
-        surface: const Color(0xFFF5F7F4),
+      return const ColorScheme.light(
+        primary: Color(0xFF2E7D32),
+        onPrimary: Color(0xFFFFFFFF),
+        primaryContainer: Color(0xFFA5D6A7),
+        onPrimaryContainer: Color(0xFF00320B),
+        secondary: Color(0xFF3A6B3C),
+        onSecondary: Color(0xFFFFFFFF),
+        secondaryContainer: Color(0xFF66BB6A),
+        onSecondaryContainer: Color(0xFF07310E),
+        tertiary: Color(0xFF7C5E00),
+        onTertiary: Color(0xFFFFFFFF),
+        tertiaryContainer: Color(0xFFFFC107),
+        onTertiaryContainer: Color(0xFF241800),
+        onSurface: Color(0xFF212121),
+        onSurfaceVariant: Color(0xFF414941),
+        outline: Color(0xFF737B72),
+        outlineVariant: Color(0xFFC2CBC1),
+        shadow: Color(0xFF000000),
+        scrim: Color(0xFF000000),
+        inverseSurface: Color(0xFF32352F),
+        onInverseSurface: Color(0xFFF2F1EC),
+        inversePrimary: Color(0xFF86D58C),
+        error: Color(0xFFBA1A1A),
+        onError: Color(0xFFFFFFFF),
+        errorContainer: Color(0xFFFFDAD6),
+        onErrorContainer: Color(0xFF410002),
+      ).copyWith(
         surfaceContainerLowest: const Color(0xFFFFFFFF),
-        surfaceContainerLow: const Color(0xFFEEF1ED),
-        surfaceContainer: const Color(0xFFE8ECE7),
-        surfaceContainerHigh: const Color(0xFFE2E7E1),
-        surfaceContainerHighest: const Color(0xFFDDE2DC),
-        onSurface: const Color(0xFF171D1A),
-        onSurfaceVariant: const Color(0xFF414A45),
-        outline: const Color(0xFF727B76),
-        outlineVariant: const Color(0xFFC1C9C2),
-        tertiary: const Color(0xFF7A5900),
-        tertiaryContainer: const Color(0xFFFFDFA0),
-        onTertiaryContainer: const Color(0xFF2B1A00),
+        surfaceContainerLow: const Color(0xFFF2F5F1),
+        surfaceContainer: const Color(0xFFEBF0EB),
+        surfaceContainerHigh: const Color(0xFFE3E9E3),
+        surfaceContainerHighest: const Color(0xFFDDE4DC),
       );
     }
-    return base.copyWith(
-      surface: const Color(0xFF0E1513),
-      surfaceContainerLowest: const Color(0xFF090F0D),
-      surfaceContainerLow: const Color(0xFF16201D),
-      surfaceContainer: const Color(0xFF1A2522),
-      surfaceContainerHigh: const Color(0xFF252F2C),
-      surfaceContainerHighest: const Color(0xFF303A36),
-      onSurface: const Color(0xFFDFE4DF),
-      onSurfaceVariant: const Color(0xFFBFC9C3),
-      outline: const Color(0xFF89938D),
-      outlineVariant: const Color(0xFF414B46),
-      tertiary: const Color(0xFFFFD08B),
-      tertiaryContainer: const Color(0xFF5A4400),
-      onTertiaryContainer: const Color(0xFFFFE2B2),
+    return const ColorScheme.dark(
+      primary: Color(0xFF83CE86),
+      onPrimary: Color(0xFF06310B),
+      primaryContainer: Color(0xFF205E25),
+      onPrimaryContainer: Color(0xFFB5F0B0),
+      secondary: Color(0xFF88C98A),
+      onSecondary: Color(0xFF0A3510),
+      secondaryContainer: Color(0xFF2E6232),
+      onSecondaryContainer: Color(0xFFC9F0C0),
+      tertiary: Color(0xFFFFD04B),
+      onTertiary: Color(0xFF251A00),
+      tertiaryContainer: Color(0xFF5C4A00),
+      onTertiaryContainer: Color(0xFFFFE3A2),
+      onSurface: Color(0xFFE0E0E0),
+      onSurfaceVariant: Color(0xFFC0C7BF),
+      outline: Color(0xFF89918A),
+      outlineVariant: Color(0xFF424A42),
+      shadow: Color(0xFF000000),
+      scrim: Color(0xFF000000),
+      inverseSurface: Color(0xFFE2E2DD),
+      onInverseSurface: Color(0xFF32352F),
+      inversePrimary: Color(0xFF2E7D32),
+      error: Color(0xFFFFB4AB),
+      onError: Color(0xFF690005),
+      errorContainer: Color(0xFF93000A),
+      onErrorContainer: Color(0xFFFFDAD6),
+    ).copyWith(
+      surfaceContainerLowest: const Color(0xFF161616),
+      surfaceContainerLow: const Color(0xFF262626),
+      surfaceContainer: const Color(0xFF2C2C2C),
+      surfaceContainerHigh: const Color(0xFF353535),
+      surfaceContainerHighest: const Color(0xFF414141),
     );
   }
 
@@ -59,7 +94,7 @@ class AppTheme {
     );
     return base.copyWith(
       scaffoldBackgroundColor: scheme.surface,
-      splashFactory: InkSparkle.splashFactory,
+      splashFactory: InkRipple.splashFactory,
       cardTheme: CardThemeData(
         elevation: 0,
         color: scheme.surfaceContainerLow,
@@ -79,6 +114,7 @@ class AppTheme {
             fontSize: 15.5,
             fontWeight: FontWeight.w700,
           ),
+          overlayColor: scheme.onSurface.withValues(alpha: 0.08),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -92,6 +128,7 @@ class AppTheme {
             fontSize: 14.5,
             fontWeight: FontWeight.w600,
           ),
+          overlayColor: scheme.onSurface.withValues(alpha: 0.08),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -100,15 +137,27 @@ class AppTheme {
             borderRadius: BorderRadius.circular(14),
           ),
           textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          overlayColor: scheme.onSurface.withValues(alpha: 0.08),
         ),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: scheme.surfaceContainerHigh,
         selectedColor: scheme.primaryContainer,
-        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        secondarySelectedColor: scheme.primaryContainer,
+        showCheckmark: false,
+        labelStyle: TextStyle(
+          fontSize: 13.5,
+          fontWeight: FontWeight.w600,
+          color: scheme.onSurfaceVariant,
+        ),
+        secondaryLabelStyle: TextStyle(
+          fontSize: 13.5,
+          fontWeight: FontWeight.w700,
+          color: scheme.onPrimaryContainer,
+        ),
         side: BorderSide.none,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: const StadiumBorder(),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,

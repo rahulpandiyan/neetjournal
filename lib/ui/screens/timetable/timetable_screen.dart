@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../../core/db/database.dart';
 import '../../../core/db/tables.dart';
 import '../../../core/utils/dates.dart';
 import '../../../state/providers.dart';
+import '../../widgets/widgets.dart';
 
 class TimetableScreen extends ConsumerStatefulWidget {
   const TimetableScreen({super.key});
@@ -178,59 +180,81 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text('$e')),
           data: (_) => ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Timetable',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 18, 0, 14),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Timetable',
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.5,
+                              height: 1.1,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            'The timetable guides; it never forces.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  IconButton(
-                    tooltip: _editMode ? 'Done editing' : 'Edit timetable',
-                    icon: Icon(_editMode ? Icons.check : Icons.edit_outlined),
-                    onPressed: () => setState(() {
-                      _editMode = !_editMode;
-                      _editToday = false;
-                    }),
-                  ),
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert),
-                    onSelected: (value) {
-                      switch (value) {
-                        case 'restore':
-                          _restoreDefault();
-                        case 'revertToday':
-                          _revertToday();
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      if (_editToday)
-                        const PopupMenuItem(
-                          value: 'revertToday',
-                          child: Text('Revert today to weekly'),
-                        )
-                      else
-                        const PopupMenuItem(
-                          value: 'restore',
-                          child: Text('Restore default timetable'),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'The timetable guides; it never forces.',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                    IconButton(
+                      tooltip: _editMode ? 'Done editing' : 'Edit timetable',
+                      style: IconButton.styleFrom(
+                        backgroundColor: _editMode
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.surfaceContainerHigh,
+                        foregroundColor: _editMode
+                            ? theme.colorScheme.onPrimary
+                            : theme.colorScheme.onSurface,
+                      ),
+                      icon: HugeIcon(
+                        icon: _editMode
+                            ? HugeIcons.strokeRoundedCheckmarkCircle02
+                            : HugeIcons.strokeRoundedEdit02,
+                      ),
+                      onPressed: () => setState(() {
+                        _editMode = !_editMode;
+                        _editToday = false;
+                      }),
+                    ),
+                    PopupMenuButton<String>(
+                      icon: const HugeIcon(icon: HugeIcons.strokeRoundedMore01),
+                      onSelected: (value) {
+                        switch (value) {
+                          case 'restore':
+                            _restoreDefault();
+                          case 'revertToday':
+                            _revertToday();
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        if (_editToday)
+                          const PopupMenuItem(
+                            value: 'revertToday',
+                            child: Text('Revert today to weekly'),
+                          )
+                        else
+                          const PopupMenuItem(
+                            value: 'restore',
+                            child: Text('Restore default timetable'),
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
               SizedBox(
                 height: 46,
                 child: ListView.separated(
@@ -261,8 +285,10 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
                     padding: const EdgeInsets.all(12),
                     child: Row(
                       children: [
-                        Icon(
-                          _editToday ? Icons.today : Icons.edit_calendar,
+                        HugeIcon(
+                          icon: _editToday
+                              ? HugeIcons.strokeRoundedCalendar01
+                              : HugeIcons.strokeRoundedCalendarSetting01,
                           size: 20,
                         ),
                         const SizedBox(width: 12),
@@ -282,7 +308,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
                 const SizedBox(height: 8),
                 TextButton.icon(
                   onPressed: _editTodayOnly,
-                  icon: const Icon(Icons.today_outlined),
+                  icon: const HugeIcon(icon: HugeIcons.strokeRoundedCalendar01),
                   label: const Text('Edit today only'),
                 ),
               ],
@@ -300,7 +326,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
                   const SizedBox(height: 4),
                   OutlinedButton.icon(
                     onPressed: _addSlot,
-                    icon: const Icon(Icons.add),
+                    icon: const HugeIcon(icon: HugeIcons.strokeRoundedPlusSign),
                     label: Text(
                       _editToday ? 'Add a session today' : 'Add a session',
                     ),
@@ -397,33 +423,37 @@ class _SlotTile extends ConsumerWidget {
         : '${timeOfDay(slot.startMin)} – ${timeOfDay(slot.endMin)}';
 
     final icon = switch (slot.activityType) {
-      ActivityType.study => Icons.menu_book,
-      ActivityType.recovery => Icons.self_improvement,
-      ActivityType.wake => Icons.wb_sunny,
-      ActivityType.breakActivity => Icons.coffee,
-      ActivityType.meal => Icons.restaurant,
-      ActivityType.college => Icons.school,
-      ActivityType.reset => Icons.autorenew,
-      ActivityType.sleep => Icons.bedtime,
-      ActivityType.planning => Icons.event_note,
-      ActivityType.free => Icons.free_breakfast,
+      ActivityType.study => HugeIcons.strokeRoundedBook02,
+      ActivityType.recovery => HugeIcons.strokeRoundedYoga01,
+      ActivityType.wake => HugeIcons.strokeRoundedSun01,
+      ActivityType.breakActivity => HugeIcons.strokeRoundedCoffee01,
+      ActivityType.meal => HugeIcons.strokeRoundedRestaurant01,
+      ActivityType.college => HugeIcons.strokeRoundedMortarboard01,
+      ActivityType.reset => HugeIcons.strokeRoundedRefresh01,
+      ActivityType.sleep => HugeIcons.strokeRoundedMoon01,
+      ActivityType.planning => HugeIcons.strokeRoundedNotebook01,
+      ActivityType.free => HugeIcons.strokeRoundedSoftDrink01,
     };
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: theme.colorScheme.surfaceContainerHighest,
-          child: Icon(icon, size: 20),
+        leading: IconBubble(
+          icon: icon,
+          color: theme.colorScheme.surfaceContainerHigh,
+          iconColor: theme.colorScheme.onSurfaceVariant,
         ),
-        title: Text(slot.title),
+        title: Text(
+          slot.title,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
         subtitle: subjectName != null
             ? Text('$subjectName · $time')
             : Text(time),
         trailing: editing
-            ? const Icon(Icons.edit, size: 18)
+            ? const HugeIcon(icon: HugeIcons.strokeRoundedEdit01, size: 18)
             : slot.isOptional
-            ? const Icon(Icons.lock_open, size: 16)
+            ? const HugeIcon(icon: HugeIcons.strokeRoundedLock, size: 16)
             : null,
         onTap: onTap,
       ),
@@ -618,7 +648,7 @@ class _EditSlotSheetState extends State<_EditSlotSheet> {
               if (widget.allowDelete)
                 IconButton(
                   tooltip: 'Delete',
-                  icon: const Icon(Icons.delete_outline),
+                  icon: const HugeIcon(icon: HugeIcons.strokeRoundedDelete01),
                   onPressed: () => Navigator.of(context).pop(
                     const _SlotResult(
                       startMin: 0,

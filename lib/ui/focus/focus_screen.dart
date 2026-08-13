@@ -2,26 +2,13 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../state/focus_controller.dart';
 import '../../state/providers.dart';
 import '../../ui/widgets/widgets.dart';
+import 'focus_palette.dart';
 import 'session_complete_sheet.dart';
-
-/// Immersive dark palette for the focus screen (locked to the app identity:
-/// green ink, lab teal, warm amber energy).
-class _Palette {
-  static const ink = Color(0xFF0B1210);
-  static const panel = Color(0xFF1E2B27);
-  static const teal = Color(0xFF66D9DE);
-  static const tealSoft = Color(0xFF20403B);
-  static const amber = Color(0xFFFFC857);
-  static const redSoft = Color(0xFFFFB4A9);
-  static const text = Colors.white;
-  static const textSoft = Color(0xFF93A19B);
-  static const textDim = Color(0xFF5C6B64);
-  static const track = Color(0x1AFFFFFF);
-}
 
 class FocusScreen extends ConsumerStatefulWidget {
   const FocusScreen({super.key});
@@ -40,15 +27,15 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
-  Future<void> _showCompletion() async {
+  Future<void> _showCompletion({FocusState? snapshot}) async {
     if (_sheetOpen) return;
     _sheetOpen = true;
-    final state = ref.read(focusControllerProvider);
+    final state = snapshot ?? ref.read(focusControllerProvider);
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: _Palette.panel,
-      builder: (_) => SessionCompleteSheet(state: state),
+      backgroundColor: FocusPalette.panel,
+      builder: (_) => SessionCompleteSheet(state: state!),
     );
     _sheetOpen = false;
     if (mounted && Navigator.of(context).canPop()) {
@@ -57,15 +44,16 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
   }
 
   void _onNextSession() {
+    final state = ref.read(focusControllerProvider);
     ref.read(focusControllerProvider.notifier).nextSession();
-    _showCompletion();
+    _showCompletion(snapshot: state);
   }
 
   Future<void> _showTiredSheet() async {
     final theme = Theme.of(context);
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: _Palette.panel,
+      backgroundColor: FocusPalette.panel,
       builder: (ctx) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -76,15 +64,15 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               Text(
                 'What would you like to do?',
                 style: theme.textTheme.titleLarge?.copyWith(
-                  color: _Palette.text,
+                  color: FocusPalette.text,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               FilledButton.tonal(
                 style: FilledButton.styleFrom(
-                  backgroundColor: _Palette.tealSoft,
-                  foregroundColor: _Palette.text,
+                  backgroundColor: FocusPalette.greenSoft,
+                  foregroundColor: FocusPalette.text,
                 ),
                 onPressed: () {
                   Navigator.of(ctx).pop();
@@ -95,8 +83,8 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               const SizedBox(height: 8),
               FilledButton.tonal(
                 style: FilledButton.styleFrom(
-                  backgroundColor: _Palette.tealSoft,
-                  foregroundColor: _Palette.text,
+                  backgroundColor: FocusPalette.greenSoft,
+                  foregroundColor: FocusPalette.text,
                 ),
                 onPressed: () {
                   Navigator.of(ctx).pop();
@@ -108,7 +96,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               FilledButton.tonal(
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFF3A2222),
-                  foregroundColor: _Palette.redSoft,
+                  foregroundColor: FocusPalette.redSoft,
                 ),
                 onPressed: () {
                   Navigator.of(ctx).pop();
@@ -118,7 +106,9 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               ),
               const SizedBox(height: 8),
               TextButton(
-                style: TextButton.styleFrom(foregroundColor: _Palette.textSoft),
+                style: TextButton.styleFrom(
+                  foregroundColor: FocusPalette.textSoft,
+                ),
                 onPressed: () => Navigator.of(ctx).pop(),
                 child: const Text('Continue'),
               ),
@@ -163,7 +153,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
 
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: _Palette.panel,
+      backgroundColor: FocusPalette.panel,
       isScrollControlled: true,
       builder: (ctx) => SafeArea(
         child: Padding(
@@ -183,13 +173,17 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              const Icon(Icons.flag_outlined, color: _Palette.amber, size: 30),
+              const HugeIcon(
+                icon: HugeIcons.strokeRoundedFlag01,
+                color: FocusPalette.amber,
+                size: 30,
+              ),
               const SizedBox(height: 12),
               Text(
                 title,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: _Palette.text,
+                  color: FocusPalette.text,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                 ),
@@ -199,7 +193,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                 message,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: _Palette.textSoft,
+                  color: FocusPalette.textSoft,
                   fontSize: 14.5,
                   height: 1.55,
                 ),
@@ -214,7 +208,9 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               ),
               const SizedBox(height: 10),
               TextButton(
-                style: TextButton.styleFrom(foregroundColor: _Palette.textSoft),
+                style: TextButton.styleFrom(
+                  foregroundColor: FocusPalette.textSoft,
+                ),
                 onPressed: () => Navigator.of(ctx).pop(),
                 child: const Text('Keep going'),
               ),
@@ -262,7 +258,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     }
 
     return Scaffold(
-      backgroundColor: _Palette.ink,
+      backgroundColor: FocusPalette.ink,
       body: SafeArea(
         child: Stack(
           children: [
@@ -273,8 +269,8 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                     gradient: RadialGradient(
                       radius: 1.1,
                       colors: [
-                        _Palette.panel.withValues(alpha: 0.55),
-                        _Palette.ink,
+                        FocusPalette.panel.withValues(alpha: 0.55),
+                        FocusPalette.ink,
                       ],
                       stops: const [0.0, 0.6],
                     ),
@@ -322,8 +318,8 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            Icons.local_drink_outlined,
+                          HugeIcon(
+                            icon: HugeIcons.strokeRoundedDroplet,
                             color: Color(0xFF81D4FA),
                             size: 18,
                           ),
@@ -368,7 +364,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
           Text(
             (paused ? 'Paused' : state.subjectName).toUpperCase(),
             style: const TextStyle(
-              color: _Palette.teal,
+              color: FocusPalette.leaf,
               fontSize: 13,
               letterSpacing: 2.4,
               fontWeight: FontWeight.w700,
@@ -379,7 +375,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
             state.title,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              color: _Palette.text,
+              color: FocusPalette.text,
               fontSize: 24,
               fontWeight: FontWeight.w700,
               height: 1.2,
@@ -390,13 +386,16 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
             Text(
               state.target!,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: _Palette.textSoft, fontSize: 14),
+              style: const TextStyle(
+                color: FocusPalette.textSoft,
+                fontSize: 14,
+              ),
             ),
           ],
           const SizedBox(height: 28),
           _TimerRing(
             progress: progress,
-            color: _Palette.teal,
+            color: FocusPalette.leaf,
             dimmed: paused,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -404,7 +403,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                 Text(
                   paused ? 'PAUSED' : 'FOCUS',
                   style: const TextStyle(
-                    color: _Palette.textDim,
+                    color: FocusPalette.textDim,
                     fontSize: 12,
                     letterSpacing: 2.2,
                     fontWeight: FontWeight.w600,
@@ -414,7 +413,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                 Text(
                   timerText,
                   style: const TextStyle(
-                    color: _Palette.text,
+                    color: FocusPalette.text,
                     fontSize: 58,
                     fontWeight: FontWeight.w300,
                     fontFeatures: [FontFeature.tabularFigures()],
@@ -424,7 +423,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                 Text(
                   'of ${_fmt(total)}',
                   style: const TextStyle(
-                    color: _Palette.textDim,
+                    color: FocusPalette.textDim,
                     fontSize: 13,
                     fontFeatures: [FontFeature.tabularFigures()],
                   ),
@@ -455,8 +454,8 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               Expanded(
                 child: FilledButton.icon(
                   style: FilledButton.styleFrom(
-                    backgroundColor: _Palette.tealSoft,
-                    foregroundColor: _Palette.text,
+                    backgroundColor: FocusPalette.greenSoft,
+                    foregroundColor: FocusPalette.text,
                   ),
                   onPressed: () {
                     final c = ref.read(focusControllerProvider.notifier);
@@ -466,8 +465,10 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                       c.pause();
                     }
                   },
-                  icon: Icon(
-                    paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                  icon: HugeIcon(
+                    icon: paused
+                        ? HugeIcons.strokeRoundedPlay
+                        : HugeIcons.strokeRoundedPause,
                   ),
                   label: Text(paused ? 'Resume' : 'Pause'),
                 ),
@@ -476,11 +477,11 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               Expanded(
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: _Palette.redSoft,
+                    foregroundColor: FocusPalette.redSoft,
                     side: const BorderSide(color: Colors.white24),
                   ),
                   onPressed: _onEndPressed,
-                  icon: const Icon(Icons.stop_circle_outlined),
+                  icon: const HugeIcon(icon: HugeIcons.strokeRoundedStop),
                   label: const Text('End'),
                 ),
               ),
@@ -489,15 +490,15 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
           const SizedBox(height: 16),
           TextButton.icon(
             onPressed: _showTiredSheet,
-            style: TextButton.styleFrom(foregroundColor: _Palette.textDim),
-            icon: const Icon(Icons.sentiment_satisfied_alt_outlined, size: 18),
+            style: TextButton.styleFrom(foregroundColor: FocusPalette.textDim),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedYoga01, size: 18),
             label: const Text("I'm tired"),
           ),
           const SizedBox(height: 8),
           Text(
             paused ? 'Paused. Come back when you are ready.' : 'Stay focused.',
             textAlign: TextAlign.center,
-            style: const TextStyle(color: _Palette.textDim, fontSize: 13),
+            style: const TextStyle(color: FocusPalette.textDim, fontSize: 13),
           ),
         ],
       );
@@ -511,12 +512,12 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
             width: 96,
             height: 96,
             decoration: BoxDecoration(
-              color: _Palette.tealSoft,
+              color: FocusPalette.greenSoft,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.check_rounded,
-              color: _Palette.teal,
+            child: const HugeIcon(
+              icon: HugeIcons.strokeRoundedCheckmarkCircle01,
+              color: FocusPalette.leaf,
               size: 52,
             ),
           ),
@@ -524,7 +525,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
           const Text(
             'Session Complete',
             style: TextStyle(
-              color: _Palette.text,
+              color: FocusPalette.text,
               fontSize: 26,
               fontWeight: FontWeight.w700,
             ),
@@ -535,13 +536,13 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
             'Take a ${state.breakDuration.inMinutes}-minute break.\n\n'
             'Drink water.\nStretch.\nRest your eyes.',
             textAlign: TextAlign.center,
-            style: const TextStyle(color: _Palette.textSoft, height: 1.6),
+            style: const TextStyle(color: FocusPalette.textSoft, height: 1.6),
           ),
           const SizedBox(height: 28),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: _Palette.teal,
-              foregroundColor: _Palette.ink,
+              backgroundColor: FocusPalette.leaf,
+              foregroundColor: FocusPalette.ink,
             ),
             onPressed: () =>
                 ref.read(focusControllerProvider.notifier).startBreak(),
@@ -565,7 +566,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
           const Text(
             'BREAK',
             style: TextStyle(
-              color: _Palette.amber,
+              color: FocusPalette.amber,
               fontSize: 13,
               letterSpacing: 2.4,
               fontWeight: FontWeight.w700,
@@ -574,7 +575,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
           const SizedBox(height: 28),
           _TimerRing(
             progress: progress,
-            color: _Palette.amber,
+            color: FocusPalette.amber,
             dimmed: paused,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -582,7 +583,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                 Text(
                   paused ? 'PAUSED' : 'REST',
                   style: const TextStyle(
-                    color: _Palette.textDim,
+                    color: FocusPalette.textDim,
                     fontSize: 12,
                     letterSpacing: 2.2,
                     fontWeight: FontWeight.w600,
@@ -592,7 +593,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                 Text(
                   timerText,
                   style: const TextStyle(
-                    color: _Palette.text,
+                    color: FocusPalette.text,
                     fontSize: 58,
                     fontWeight: FontWeight.w300,
                     fontFeatures: [FontFeature.tabularFigures()],
@@ -602,7 +603,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                 Text(
                   'of ${_fmt(total)}',
                   style: const TextStyle(
-                    color: _Palette.textDim,
+                    color: FocusPalette.textDim,
                     fontSize: 13,
                     fontFeatures: [FontFeature.tabularFigures()],
                   ),
@@ -613,7 +614,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
           const SizedBox(height: 24),
           const Text(
             'Rest your eyes. No phone.',
-            style: TextStyle(color: _Palette.textDim, fontSize: 13),
+            style: TextStyle(color: FocusPalette.textDim, fontSize: 13),
           ),
           const SizedBox(height: 24),
           Row(
@@ -621,8 +622,8 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               Expanded(
                 child: FilledButton.icon(
                   style: FilledButton.styleFrom(
-                    backgroundColor: _Palette.tealSoft,
-                    foregroundColor: _Palette.text,
+                    backgroundColor: FocusPalette.greenSoft,
+                    foregroundColor: FocusPalette.text,
                   ),
                   onPressed: () {
                     final c = ref.read(focusControllerProvider.notifier);
@@ -632,8 +633,10 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                       c.pauseBreak();
                     }
                   },
-                  icon: Icon(
-                    paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                  icon: HugeIcon(
+                    icon: paused
+                        ? HugeIcons.strokeRoundedPlay
+                        : HugeIcons.strokeRoundedPause,
                   ),
                   label: Text(paused ? 'Resume' : 'Pause'),
                 ),
@@ -642,7 +645,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               Expanded(
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: _Palette.textSoft,
+                    foregroundColor: FocusPalette.textSoft,
                     side: const BorderSide(color: Colors.white24),
                   ),
                   onPressed: () =>
@@ -667,9 +670,9 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
             color: const Color(0xFF3A3020),
             shape: BoxShape.circle,
           ),
-          child: const Icon(
-            Icons.notifications_active_rounded,
-            color: _Palette.amber,
+          child: const HugeIcon(
+            icon: HugeIcons.strokeRoundedNotification01,
+            color: FocusPalette.amber,
             size: 48,
           ),
         ),
@@ -677,7 +680,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         const Text(
           'Break Complete',
           style: TextStyle(
-            color: _Palette.text,
+            color: FocusPalette.text,
             fontSize: 26,
             fontWeight: FontWeight.w700,
           ),
@@ -685,13 +688,13 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         const SizedBox(height: 8),
         const Text(
           'Time to get back to it.',
-          style: TextStyle(color: _Palette.textSoft),
+          style: TextStyle(color: FocusPalette.textSoft),
         ),
         const SizedBox(height: 28),
         FilledButton(
           style: FilledButton.styleFrom(
-            backgroundColor: _Palette.teal,
-            foregroundColor: _Palette.ink,
+            backgroundColor: FocusPalette.leaf,
+            foregroundColor: FocusPalette.ink,
           ),
           onPressed: _onNextSession,
           child: const Text('START NEXT SESSION'),
@@ -757,7 +760,7 @@ class _RingPainter extends CustomPainter {
     final track = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
-      ..color = _Palette.track
+      ..color = FocusPalette.track
       ..strokeCap = StrokeCap.round;
     canvas.drawCircle(center, radius, track);
 

@@ -25,6 +25,7 @@ class FocusState {
     this.slotId,
     this.startedAt,
     this.endTime,
+    this.pausedRemaining,
   });
 
   final FocusPhase phase;
@@ -38,6 +39,11 @@ class FocusState {
   final DateTime? startedAt;
   final DateTime? endTime;
 
+  /// Frozen countdown snapshot while paused. Kept separate from [endTime] so
+  /// that `remaining()` does not keep draining against the wall clock while
+  /// the timer is paused.
+  final Duration? pausedRemaining;
+
   /// Remaining time in the current phase (computed for display).
   Duration remaining([DateTime? now]) {
     final ref = now ?? DateTime.now();
@@ -45,7 +51,7 @@ class FocusState {
       return endTime != null ? endTime!.difference(ref) : focusDuration;
     }
     if (phase == FocusPhase.paused || phase == FocusPhase.breakPaused) {
-      return endTime != null ? endTime!.difference(ref) : Duration.zero;
+      return pausedRemaining ?? Duration.zero;
     }
     return Duration.zero;
   }
@@ -61,7 +67,9 @@ class FocusState {
     int? slotId,
     DateTime? startedAt,
     DateTime? endTime,
+    Duration? pausedRemaining,
     bool clearEndTime = false,
+    bool clearPausedRemaining = false,
   }) {
     return FocusState(
       phase: phase ?? this.phase,
@@ -74,6 +82,9 @@ class FocusState {
       slotId: slotId ?? this.slotId,
       startedAt: startedAt ?? this.startedAt,
       endTime: clearEndTime ? null : (endTime ?? this.endTime),
+      pausedRemaining: clearPausedRemaining
+          ? null
+          : (pausedRemaining ?? this.pausedRemaining),
     );
   }
 }
@@ -150,6 +161,7 @@ class FocusController extends Notifier<FocusState> {
       endTime: DateTime.now().add(
         Duration(minutes: focusMinutes ?? state.focusDuration.inMinutes),
       ),
+      clearPausedRemaining: true,
     );
     _ensureTicker();
   }
@@ -160,7 +172,8 @@ class FocusController extends Notifier<FocusState> {
     _stopTicker();
     state = s.copyWith(
       phase: FocusPhase.paused,
-      endTime: DateTime.now().add(s.remaining()),
+      clearEndTime: true,
+      pausedRemaining: s.remaining(),
     );
   }
 
@@ -170,6 +183,7 @@ class FocusController extends Notifier<FocusState> {
     state = s.copyWith(
       phase: FocusPhase.focusing,
       endTime: DateTime.now().add(s.remaining()),
+      clearPausedRemaining: true,
     );
     _ensureTicker();
   }
@@ -180,7 +194,11 @@ class FocusController extends Notifier<FocusState> {
     final s = state;
     if (s.phase != FocusPhase.focusing && s.phase != FocusPhase.paused) return;
     _stopTicker();
-    state = s.copyWith(phase: FocusPhase.sessionComplete, clearEndTime: true);
+    state = s.copyWith(
+      phase: FocusPhase.sessionComplete,
+      clearEndTime: true,
+      clearPausedRemaining: true,
+    );
   }
 
   void startBreak() {
@@ -192,6 +210,7 @@ class FocusController extends Notifier<FocusState> {
     state = s.copyWith(
       phase: FocusPhase.breaking,
       endTime: DateTime.now().add(s.breakDuration),
+      clearPausedRemaining: true,
     );
     _ensureTicker();
   }
@@ -202,7 +221,8 @@ class FocusController extends Notifier<FocusState> {
     _stopTicker();
     state = s.copyWith(
       phase: FocusPhase.breakPaused,
-      endTime: DateTime.now().add(s.remaining()),
+      clearEndTime: true,
+      pausedRemaining: s.remaining(),
     );
   }
 
@@ -212,6 +232,7 @@ class FocusController extends Notifier<FocusState> {
     state = s.copyWith(
       phase: FocusPhase.breaking,
       endTime: DateTime.now().add(s.remaining()),
+      clearPausedRemaining: true,
     );
     _ensureTicker();
   }
@@ -222,7 +243,11 @@ class FocusController extends Notifier<FocusState> {
       return;
     }
     _stopTicker();
-    state = s.copyWith(phase: FocusPhase.breakComplete, clearEndTime: true);
+    state = s.copyWith(
+      phase: FocusPhase.breakComplete,
+      clearEndTime: true,
+      clearPausedRemaining: true,
+    );
   }
 
   /// "I'm tired" → start a break of [minutes] right away.
@@ -234,6 +259,7 @@ class FocusController extends Notifier<FocusState> {
       phase: FocusPhase.breaking,
       breakDuration: Duration(minutes: minutes),
       endTime: DateTime.now().add(Duration(minutes: minutes)),
+      clearPausedRemaining: true,
     );
     _ensureTicker();
   }
@@ -247,7 +273,11 @@ class FocusController extends Notifier<FocusState> {
     final s = state;
     if (s.phase != FocusPhase.focusing && s.phase != FocusPhase.paused) return;
     _stopTicker();
-    state = s.copyWith(phase: FocusPhase.finished, clearEndTime: true);
+    state = s.copyWith(
+      phase: FocusPhase.finished,
+      clearEndTime: true,
+      clearPausedRemaining: true,
+    );
   }
 
   /// "Start next session" — the focus flow is complete; reset for the next one.

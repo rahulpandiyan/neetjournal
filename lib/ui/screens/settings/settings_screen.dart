@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 
 import '../../../state/providers.dart';
+import '../../widgets/widgets.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -13,30 +15,37 @@ class SettingsScreen extends ConsumerWidget {
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(vertical: 0),
           children: [
-            Text(
-              'Settings',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w700,
+            const ScreenHeader(
+              title: 'Settings',
+              subtitle: 'Focus, reminders, and your NEET date',
+              icon: HugeIcons.strokeRoundedSettings02,
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  _ExamDateTile(),
+                  Divider(),
+                  _PomodoroTile(),
+                  Divider(),
+                  _WaterReminderTile(),
+                  Divider(),
+                  _NotificationsTile(),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-            const _ExamDateTile(),
-            const Divider(),
-            const _PomodoroTile(),
-            const Divider(),
-            const _WaterReminderTile(),
-            const Divider(),
-            const _NotificationsTile(),
-            const Divider(),
             const SizedBox(height: 24),
-            Text(
-              'The app is a coach, not a controller.\nMissed sessions? Just decide what to do next — no guilt.',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                height: 1.5,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'The app is a coach, not a controller.\nMissed sessions? Just decide what to do next — no guilt.',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  height: 1.5,
+                ),
               ),
             ),
           ],
@@ -59,16 +68,16 @@ class _ExamDateTileState extends ConsumerState<_ExamDateTile> {
     final examAsync = ref.watch(examDateProvider);
     return examAsync.when(
       loading: () => const ListTile(
-        leading: Icon(Icons.event),
+        leading: HugeIcon(icon: HugeIcons.strokeRoundedCalendar01),
         title: Text('Exam date'),
         subtitle: Text('Loading...'),
       ),
       error: (e, _) => ListTile(title: Text('$e')),
       data: (exam) => ListTile(
-        leading: const Icon(Icons.event),
+        leading: const HugeIcon(icon: HugeIcons.strokeRoundedCalendar01),
         title: const Text('NEET Exam Date'),
         subtitle: Text(DateFormat('d MMMM yyyy').format(exam)),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: const HugeIcon(icon: HugeIcons.strokeRoundedArrowRight02),
         onTap: () async {
           final picked = await showDatePicker(
             context: context,
@@ -116,7 +125,7 @@ class _PomodoroTileState extends ConsumerState<_PomodoroTile> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListTile(
-              leading: const Icon(Icons.timer_outlined),
+              leading: const HugeIcon(icon: HugeIcons.strokeRoundedTimer01),
               title: const Text('Focus timer'),
               subtitle: Text(
                 'Focus ${d.$1} min · Break ${d.$2} min ($currentName)',
@@ -220,7 +229,7 @@ class _WaterReminderTile extends ConsumerWidget {
     final waterAsync = ref.watch(waterReminderProvider);
     return waterAsync.when(
       loading: () => const SwitchListTile(
-        secondary: Icon(Icons.local_drink_outlined),
+        secondary: HugeIcon(icon: HugeIcons.strokeRoundedDrink),
         title: Text('Drink water reminder'),
         subtitle: Text('Loading...'),
         value: false,
@@ -233,7 +242,7 @@ class _WaterReminderTile extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SwitchListTile(
-              secondary: const Icon(Icons.local_drink_outlined),
+              secondary: const HugeIcon(icon: HugeIcons.strokeRoundedDrink),
               title: const Text('Drink water reminder'),
               subtitle: const Text(
                 'A gentle reminder during every focus session',
@@ -281,7 +290,7 @@ class _NotificationsTile extends ConsumerWidget {
     final prefsAsync = ref.watch(notificationPrefsProvider);
     return prefsAsync.when(
       loading: () => const ListTile(
-        leading: Icon(Icons.notifications_none),
+        leading: HugeIcon(icon: HugeIcons.strokeRoundedNotification01),
         title: Text('Notifications'),
         subtitle: Text('Loading...'),
       ),
@@ -292,7 +301,7 @@ class _NotificationsTile extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SwitchListTile(
-              secondary: const Icon(Icons.schedule_outlined),
+              secondary: const HugeIcon(icon: HugeIcons.strokeRoundedClock02),
               title: const Text('Study reminders'),
               subtitle: const Text(
                 'A nudge before and when each study slot starts',
@@ -304,7 +313,7 @@ class _NotificationsTile extends ConsumerWidget {
               },
             ),
             SwitchListTile(
-              secondary: const Icon(Icons.self_improvement_outlined),
+              secondary: const HugeIcon(icon: HugeIcons.strokeRoundedYoga01),
               title: const Text('Rest reminders'),
               subtitle: const Text(
                 '“Session complete. Take a break” at the end of each slot',
@@ -316,7 +325,7 @@ class _NotificationsTile extends ConsumerWidget {
               },
             ),
             SwitchListTile(
-              secondary: const Icon(Icons.autorenew_outlined),
+              secondary: const HugeIcon(icon: HugeIcons.strokeRoundedRefresh01),
               title: const Text('Revision reminders'),
               subtitle: const Text(
                 'A reminder when a revision task is due today',
@@ -328,7 +337,7 @@ class _NotificationsTile extends ConsumerWidget {
               },
             ),
             SwitchListTile(
-              secondary: const Icon(Icons.wb_sunny_outlined),
+              secondary: const HugeIcon(icon: HugeIcons.strokeRoundedSun01),
               title: const Text('Morning greeting'),
               subtitle: const Text(
                 'Good morning + days left to NEET, at wake-up',
@@ -340,7 +349,7 @@ class _NotificationsTile extends ConsumerWidget {
               },
             ),
             SwitchListTile(
-              secondary: const Icon(Icons.nightlight_outlined),
+              secondary: const HugeIcon(icon: HugeIcons.strokeRoundedMoon01),
               title: const Text('Sleep reminder'),
               subtitle: const Text('Time to sleep and reset for tomorrow'),
               value: prefs.sleep,
@@ -363,7 +372,9 @@ class _NotificationsTile extends ConsumerWidget {
                               body: 'Reminders are working. Keep going!',
                             );
                       },
-                      icon: const Icon(Icons.notifications_active_outlined),
+                      icon: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedNotification02,
+                      ),
                       label: const Text('Send test reminder'),
                     ),
                   ),

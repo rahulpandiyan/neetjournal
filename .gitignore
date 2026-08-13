@@ -48,3 +48,6 @@ app.*.map.json
 .agents/
 .commandcode/
 skills-lock.json
+
+# Machine-local Gradle toolchain file (generated)
+android/gradle/gradle-daemon-jvm.properties

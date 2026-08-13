@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/db/database.dart';
@@ -19,7 +20,7 @@ class TestsScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Test Tracking')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _addTest(context, ref),
-        icon: const Icon(Icons.add),
+        icon: const HugeIcon(icon: HugeIcons.strokeRoundedPlusSign),
         label: const Text('Record Test'),
       ),
       body: testsAsync.when(
@@ -129,8 +130,8 @@ class _EmptyState extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.assignment_outlined,
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedClipboard,
               size: 56,
               color: theme.colorScheme.primary,
             ),
@@ -262,7 +263,10 @@ class _TestCardState extends ConsumerState<_TestCard> {
                       Text('Mistakes', style: theme.textTheme.titleSmall),
                       TextButton.icon(
                         onPressed: () => _addMistake(context, t),
-                        icon: const Icon(Icons.add, size: 18),
+                        icon: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedPlusSign,
+                          size: 18,
+                        ),
                         label: const Text('Add'),
                       ),
                     ],
@@ -288,10 +292,10 @@ class _TestCardState extends ConsumerState<_TestCard> {
                             ListTile(
                               dense: true,
                               contentPadding: EdgeInsets.zero,
-                              leading: Icon(
-                                m.isRevisioned
-                                    ? Icons.check_circle_outline
-                                    : Icons.error_outline,
+                              leading: HugeIcon(
+                                icon: m.isRevisioned
+                                    ? HugeIcons.strokeRoundedCheckmarkCircle01
+                                    : HugeIcons.strokeRoundedAlert02,
                                 size: 20,
                                 color: m.isRevisioned
                                     ? Colors.green
@@ -303,15 +307,15 @@ class _TestCardState extends ConsumerState<_TestCard> {
                                 '${m.subjectId != null ? ' · ${_subjectName(ref, m.subjectId!)}' : ''}',
                               ),
                               trailing: m.isRevisioned
-                                  ? const Icon(
-                                      Icons.autorenew,
+                                  ? const HugeIcon(
+                                      icon: HugeIcons.strokeRoundedRefresh01,
                                       size: 18,
                                       color: Colors.green,
                                     )
                                   : IconButton(
                                       tooltip: 'Add to revision',
-                                      icon: const Icon(
-                                        Icons.track_changes,
+                                      icon: const HugeIcon(
+                                        icon: HugeIcons.strokeRoundedRadar01,
                                         size: 20,
                                       ),
                                       onPressed: () => ref
@@ -489,9 +493,9 @@ class _AddTestSheetState extends ConsumerState<_AddTestSheet> {
             const SizedBox(height: 16),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.event),
+              leading: const HugeIcon(icon: HugeIcons.strokeRoundedCalendar01),
               title: Text(DateFormat('EEEE, d MMMM yyyy').format(_date)),
-              trailing: const Icon(Icons.edit_outlined),
+              trailing: const HugeIcon(icon: HugeIcons.strokeRoundedEdit02),
               onTap: () async {
                 final picked = await showDatePicker(
                   context: context,

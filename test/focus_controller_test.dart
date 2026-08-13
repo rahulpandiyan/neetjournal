@@ -107,4 +107,39 @@ void main() {
     expect(before, greaterThan(const Duration(seconds: 58)));
     expect(st().endTime, isNotNull);
   });
+
+  test('paused remaining stays frozen over real time', () async {
+    controller.startFocus(
+      subjectName: 'Physics',
+      title: 'x',
+      focusMinutes: 50,
+      breakMinutes: 10,
+    );
+    controller.pause();
+    expect(phase(), FocusPhase.paused);
+    final frozen = st().remaining();
+    await Future<void>.delayed(const Duration(milliseconds: 2500));
+    expect(st().remaining(), frozen);
+  });
+
+  test('paused break remaining stays frozen and resume preserves it', () async {
+    controller.startFocus(
+      subjectName: 'Biology',
+      title: 'z',
+      focusMinutes: 50,
+      breakMinutes: 10,
+    );
+    controller.finish();
+    controller.startBreak();
+    controller.pauseBreak();
+    final frozen = st().remaining();
+    await Future<void>.delayed(const Duration(milliseconds: 1500));
+    controller.resumeBreak();
+    final resumed = st().remaining();
+    expect(phase(), FocusPhase.breaking);
+    expect(
+      (frozen - resumed).abs(),
+      lessThan(const Duration(milliseconds: 300)),
+    );
+  });
 }

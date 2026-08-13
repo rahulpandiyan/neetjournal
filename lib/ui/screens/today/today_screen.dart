@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/db/database.dart';
@@ -9,6 +10,7 @@ import '../../../state/focus_controller.dart';
 import '../../../state/providers.dart';
 import '../../../state/today_controller.dart';
 import '../../focus/start_session.dart';
+import '../../widgets/widgets.dart';
 import '../../widgets/countdown_card.dart';
 
 class TodayScreen extends ConsumerWidget {
@@ -17,7 +19,6 @@ class TodayScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dataAsync = ref.watch(todayProvider);
-    final theme = Theme.of(context);
 
     return Scaffold(
       body: dataAsync.when(
@@ -33,56 +34,55 @@ class TodayScreen extends ConsumerWidget {
             child: CustomScrollView(
               slivers: [
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${greetingFor(data.now)} 👋',
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ScreenHeader(
+                        title: '${greetingFor(data.now)} 👋',
+                        subtitle: DateFormat('EEEE, d MMMM').format(data.now),
+                        icon: HugeIcons.strokeRoundedCalendar01,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            CountdownCard(daysLeft: data.daysLeft),
+                            const SizedBox(height: 16),
+                            _BadDayToggle(active: data.badDay, now: data.now),
+                            if (data.badDay) ...[
+                              const SizedBox(height: 16),
+                              _BadDayCard(
+                                subjectIds: studySubjectIds(data.slots),
+                              ),
+                            ],
+                            if (missed.isNotEmpty) ...[
+                              const SizedBox(height: 16),
+                              _MissedCard(slots: missed),
+                            ],
+                            if (data.pending.isNotEmpty) ...[
+                              const SizedBox(height: 16),
+                              _PendingCard(pending: data.pending),
+                            ],
+                            const SizedBox(height: 16),
+                            _NowCard(slot: nowSlot),
+                            const SizedBox(height: 16),
+                            if (nextSlot != null) ...[
+                              _NextCard(slot: nextSlot),
+                              const SizedBox(height: 24),
+                            ],
+                            SectionHeader(
+                              title: "Today's sessions",
+                              icon: HugeIcons.strokeRoundedBook02,
+                            ),
+                            const SizedBox(height: 8),
+                            _TodayList(slots: data.slots, data: data),
+                            const SizedBox(height: 32),
+                          ],
                         ),
-                        Text(
-                          DateFormat('EEEE, d MMMM').format(data.now),
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        CountdownCard(daysLeft: data.daysLeft),
-                        const SizedBox(height: 16),
-                        _BadDayToggle(active: data.badDay, now: data.now),
-                        if (data.badDay) ...[
-                          const SizedBox(height: 16),
-                          _BadDayCard(subjectIds: studySubjectIds(data.slots)),
-                        ],
-                        if (missed.isNotEmpty) ...[
-                          const SizedBox(height: 16),
-                          _MissedCard(slots: missed),
-                        ],
-                        if (data.pending.isNotEmpty)
-                          _PendingCard(pending: data.pending),
-                        if (data.pending.isNotEmpty) const SizedBox(height: 16),
-                        _NowCard(slot: nowSlot),
-                        const SizedBox(height: 16),
-                        if (nextSlot != null) ...[
-                          _NextCard(slot: nextSlot),
-                          const SizedBox(height: 24),
-                        ],
-                        Text(
-                          'TODAY',
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            letterSpacing: 1.5,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        _TodayList(slots: data.slots, data: data),
-                        const SizedBox(height: 32),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -197,9 +197,13 @@ class _NowCard extends ConsumerWidget {
             ],
             if (s.activityType.isStudyLike) ...[
               const SizedBox(height: 16),
-              FilledButton(
+              FilledButton.icon(
                 onPressed: () => _start(context, ref, s),
-                child: const Text('START STUDY'),
+                icon: const HugeIcon(
+                  icon: HugeIcons.strokeRoundedPlay,
+                  size: 18,
+                ),
+                label: const Text('START STUDY'),
               ),
             ],
           ],
@@ -242,8 +246,8 @@ class _BadDayToggle extends ConsumerWidget {
     return Card(
       margin: EdgeInsets.zero,
       child: SwitchListTile(
-        secondary: Icon(
-          Icons.sentiment_dissatisfied_outlined,
+        secondary: HugeIcon(
+          icon: HugeIcons.strokeRoundedSad01,
           color: theme.colorScheme.tertiary,
         ),
         title: const Text("I'm having a bad day"),
@@ -341,7 +345,10 @@ class _NextCard extends StatelessWidget {
       margin: EdgeInsets.zero,
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
-        leading: Icon(Icons.schedule, color: theme.colorScheme.primary),
+        leading: HugeIcon(
+          icon: HugeIcons.strokeRoundedClock02,
+          color: theme.colorScheme.primary,
+        ),
         title: Text(
           'NEXT — ${timeOfDay(slot.startMin)}',
           style: theme.textTheme.labelMedium?.copyWith(
@@ -365,40 +372,65 @@ class _TodayList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final studySlots = slots
         .where((s) => s.activityType.isStudyLike && !s.isOptional)
         .toList();
-    return Column(
-      children: [
-        for (final s in studySlots)
-          ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(
-              data.completedSlotIds.contains(s.id)
-                  ? Icons.check_circle
-                  : Icons.radio_button_unchecked,
-              color: data.completedSlotIds.contains(s.id)
-                  ? Colors.green
-                  : Theme.of(context).colorScheme.outline,
-            ),
-            title: Text(
-              s.title,
-              style: TextStyle(
-                decoration: data.completedSlotIds.contains(s.id)
-                    ? TextDecoration.lineThrough
-                    : null,
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Column(
+        children: [
+          for (final s in studySlots)
+            ListTile(
+              dense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 4,
+              ),
+              leading: IconBubble(
+                icon: data.completedSlotIds.contains(s.id)
+                    ? HugeIcons.strokeRoundedCheckmarkCircle01
+                    : HugeIcons.strokeRoundedRadioButton,
                 color: data.completedSlotIds.contains(s.id)
-                    ? Theme.of(context).colorScheme.onSurfaceVariant
-                    : null,
+                    ? Colors.green.withValues(alpha: 0.14)
+                    : scheme.surfaceContainerHighest,
+                iconColor: data.completedSlotIds.contains(s.id)
+                    ? Colors.green
+                    : scheme.outline,
+              ),
+              title: Text(
+                s.title,
+                style: TextStyle(
+                  decoration: data.completedSlotIds.contains(s.id)
+                      ? TextDecoration.lineThrough
+                      : null,
+                  color: data.completedSlotIds.contains(s.id)
+                      ? scheme.onSurfaceVariant
+                      : null,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              trailing: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  timeOfDay(s.startMin),
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
               ),
             ),
-            trailing: Text(
-              timeOfDay(s.startMin),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -438,23 +470,31 @@ class _MissedCard extends ConsumerWidget {
               spacing: 8,
               runSpacing: 8,
               children: [
-                FilledButton(
+                FilledButton.icon(
                   style: FilledButton.styleFrom(
                     backgroundColor: theme.colorScheme.error,
                     foregroundColor: theme.colorScheme.onError,
                     minimumSize: const Size(120, 44),
                   ),
                   onPressed: () => _studyNow(context, ref, slot),
-                  child: const Text('Study Now'),
+                  icon: const HugeIcon(
+                    icon: HugeIcons.strokeRoundedPlay,
+                    size: 18,
+                  ),
+                  label: const Text('Study Now'),
                 ),
-                OutlinedButton(
+                OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(120, 44),
                   ),
                   onPressed: () => _moveLater(context, ref, slot),
-                  child: const Text('Move Later'),
+                  icon: const HugeIcon(
+                    icon: HugeIcons.strokeRoundedClock02,
+                    size: 18,
+                  ),
+                  label: const Text('Move Later'),
                 ),
-                OutlinedButton(
+                OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(120, 44),
                   ),
@@ -465,14 +505,22 @@ class _MissedCard extends ConsumerWidget {
                     date: DateTime.now().add(const Duration(days: 1)),
                     label: 'Move Tomorrow',
                   ),
-                  child: const Text('Tomorrow'),
+                  icon: const HugeIcon(
+                    icon: HugeIcons.strokeRoundedCalendar02,
+                    size: 18,
+                  ),
+                  label: const Text('Tomorrow'),
                 ),
-                OutlinedButton(
+                OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(120, 44),
                   ),
                   onPressed: () => _moveToSaturday(context, ref, slot),
-                  child: const Text('Saturday'),
+                  icon: const HugeIcon(
+                    icon: HugeIcons.strokeRoundedCalendar02,
+                    size: 18,
+                  ),
+                  label: const Text('Saturday'),
                 ),
                 TextButton(
                   onPressed: () => _skip(context, ref, slot),
@@ -600,48 +648,58 @@ class _PendingCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final subjects = ref.watch(subjectsByIdProvider).valueOrNull;
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'PENDING',
-              style: theme.textTheme.labelLarge?.copyWith(
-                letterSpacing: 1.5,
-                color: theme.colorScheme.tertiary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            for (final p in pending.take(3))
-              ListTile(
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(
-                  Icons.pending_outlined,
-                  color: theme.colorScheme.tertiary,
-                ),
-                title: Text(p.description),
-                subtitle: p.subjectId != null
-                    ? Text(subjects?[p.subjectId]?.name ?? '')
-                    : null,
-                trailing: PopupMenuButton<String>(
-                  onSelected: (action) => _handle(ref, action, p),
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'today', child: Text('Do Today')),
-                    PopupMenuItem(
-                      value: 'tomorrow',
-                      child: Text('Move to Tomorrow'),
-                    ),
-                    PopupMenuItem(value: 'skip', child: Text('Skip')),
-                  ],
-                ),
-              ),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(
+          title: 'Pending tasks',
+          icon: HugeIcons.strokeRoundedHourglass,
         ),
-      ),
+        const SizedBox(height: 8),
+        Card(
+          margin: EdgeInsets.zero,
+          child: Column(
+            children: [
+              for (final p in pending.take(3))
+                ListTile(
+                  dense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
+                  leading: IconBubble(
+                    icon: HugeIcons.strokeRoundedHourglass,
+                    color: theme.colorScheme.tertiaryContainer,
+                    iconColor: theme.colorScheme.onTertiaryContainer,
+                  ),
+                  title: Text(
+                    p.description,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: p.subjectId != null
+                      ? Text(
+                          subjects?[p.subjectId]?.name ?? '',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        )
+                      : null,
+                  trailing: PopupMenuButton<String>(
+                    onSelected: (action) => _handle(ref, action, p),
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(value: 'today', child: Text('Do Today')),
+                      PopupMenuItem(
+                        value: 'tomorrow',
+                        child: Text('Move to Tomorrow'),
+                      ),
+                      PopupMenuItem(value: 'skip', child: Text('Skip')),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

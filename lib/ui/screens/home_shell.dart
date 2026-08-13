@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import 'journal/journal_screen.dart';
 import 'progress/progress_screen.dart';
@@ -25,31 +26,14 @@ class _HomeShellState extends State<HomeShell> {
   ];
 
   static const _destinations = [
+    _Destination(icon: HugeIcons.strokeRoundedCalendar01, label: 'Today'),
+    _Destination(icon: HugeIcons.strokeRoundedCalendar02, label: 'Timetable'),
+    _Destination(icon: HugeIcons.strokeRoundedBook01, label: 'Journal'),
     _Destination(
-      icon: Icons.today_outlined,
-      selectedIcon: Icons.today,
-      label: 'Today',
-    ),
-    _Destination(
-      icon: Icons.calendar_month_outlined,
-      selectedIcon: Icons.calendar_month,
-      label: 'Timetable',
-    ),
-    _Destination(
-      icon: Icons.book_outlined,
-      selectedIcon: Icons.book,
-      label: 'Journal',
-    ),
-    _Destination(
-      icon: Icons.insights_outlined,
-      selectedIcon: Icons.insights,
+      icon: HugeIcons.strokeRoundedTrendingUpDown,
       label: 'Progress',
     ),
-    _Destination(
-      icon: Icons.settings_outlined,
-      selectedIcon: Icons.settings,
-      label: 'Settings',
-    ),
+    _Destination(icon: HugeIcons.strokeRoundedSettings01, label: 'Settings'),
   ];
 
   @override
@@ -67,8 +51,8 @@ class _HomeShellState extends State<HomeShell> {
                   labelType: NavigationRailLabelType.all,
                   leading: Padding(
                     padding: const EdgeInsets.only(top: 8, bottom: 8),
-                    child: Icon(
-                      Icons.school,
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedMortarboard01,
                       color: Theme.of(context).colorScheme.primary,
                       size: 28,
                     ),
@@ -76,8 +60,7 @@ class _HomeShellState extends State<HomeShell> {
                   destinations: [
                     for (final d in _destinations)
                       NavigationRailDestination(
-                        icon: Icon(d.icon),
-                        selectedIcon: Icon(d.selectedIcon),
+                        icon: HugeIcon(icon: d.icon),
                         label: Text(d.label),
                       ),
                   ],
@@ -99,8 +82,7 @@ class _HomeShellState extends State<HomeShell> {
       destinations: [
         for (final d in _destinations)
           NavigationDestination(
-            icon: Icon(d.icon),
-            selectedIcon: Icon(d.selectedIcon),
+            icon: HugeIcon(icon: d.icon),
             label: d.label,
           ),
       ],
@@ -109,13 +91,8 @@ class _HomeShellState extends State<HomeShell> {
 }
 
 class _Destination {
-  const _Destination({
-    required this.icon,
-    required this.selectedIcon,
-    required this.label,
-  });
+  const _Destination({required this.icon, required this.label});
 
-  final IconData icon;
-  final IconData selectedIcon;
+  final List<List<dynamic>> icon;
   final String label;
 }

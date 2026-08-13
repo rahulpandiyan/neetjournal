@@ -1,9 +1,148 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../core/db/database.dart';
 import '../../core/db/tables.dart';
 import '../../state/providers.dart';
+
+/// Rounded-square chip that holds a HugeIcon, used as a recurring visual motif
+/// (section headers, list leading badges, header accents).
+class IconBubble extends StatelessWidget {
+  const IconBubble({
+    super.key,
+    required this.icon,
+    this.size = 26,
+    this.radius = 8,
+    this.iconSize = 15,
+    this.color,
+    this.iconColor,
+  });
+
+  final List<List<dynamic>> icon;
+  final double size;
+  final double radius;
+  final double iconSize;
+  final Color? color;
+  final Color? iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: color ?? scheme.primaryContainer,
+        borderRadius: BorderRadius.circular(radius),
+      ),
+      child: HugeIcon(
+        icon: icon,
+        size: iconSize,
+        color: iconColor ?? scheme.onPrimaryContainer,
+      ),
+    );
+  }
+}
+
+/// Large screen header: bold title + subtitle + icon accent bubble on the
+/// right. Shared across tabs for a consistent, modern top edge.
+class ScreenHeader extends StatelessWidget {
+  const ScreenHeader({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    this.padding = const EdgeInsets.fromLTRB(20, 18, 20, 14),
+  });
+
+  final String title;
+  final String subtitle;
+  final List<List<dynamic>> icon;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Padding(
+      padding: padding,
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconBubble(icon: icon, size: 46, radius: 15, iconSize: 23),
+        ],
+      ),
+    );
+  }
+}
+
+/// Section header with a small icon chip + bold title.
+class SectionHeader extends StatelessWidget {
+  const SectionHeader({
+    super.key,
+    required this.title,
+    required this.icon,
+    this.color,
+    this.iconColor,
+    this.padding = EdgeInsets.zero,
+  });
+
+  final String title;
+  final List<List<dynamic>> icon;
+  final Color? color;
+  final Color? iconColor;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: padding,
+      child: Row(
+        children: [
+          IconBubble(
+            icon: icon,
+            size: 26,
+            radius: 8,
+            iconSize: 15,
+            color: color,
+            iconColor: iconColor,
+          ),
+          const SizedBox(width: 10),
+          Text(
+            title,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 /// Small-caps section label with the signature leading accent bar.
 class SectionTitle extends StatelessWidget {
@@ -167,8 +306,9 @@ class _ChapterChecklistState extends ConsumerState<ChapterChecklist> {
                                         duration: const Duration(
                                           milliseconds: 200,
                                         ),
-                                        child: Icon(
-                                          Icons.keyboard_arrow_down_rounded,
+                                        child: HugeIcon(
+                                          icon: HugeIcons
+                                              .strokeRoundedArrowDown02,
                                           size: 18,
                                           color: theme
                                               .colorScheme
@@ -232,8 +372,10 @@ class _ChapterRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
         child: Row(
           children: [
-            Icon(
-              learned ? Icons.check_circle_rounded : Icons.circle_outlined,
+            HugeIcon(
+              icon: learned
+                  ? HugeIcons.strokeRoundedCheckmarkCircle01
+                  : HugeIcons.strokeRoundedRadioButton,
               size: 22,
               color: learned ? color : theme.colorScheme.outlineVariant,
             ),
@@ -265,14 +407,14 @@ class HoldToConfirmButton extends StatefulWidget {
     super.key,
     required this.onConfirmed,
     required this.label,
-    this.icon = Icons.stop_circle_outlined,
+    this.icon = HugeIcons.strokeRoundedStop,
     this.color,
     this.duration = const Duration(milliseconds: 1600),
   });
 
   final VoidCallback onConfirmed;
   final String label;
-  final IconData icon;
+  final List<List<dynamic>> icon;
   final Color? color;
   final Duration duration;
 
@@ -309,7 +451,6 @@ class _HoldToConfirmButtonState extends State<HoldToConfirmButton>
         onTapDown: (_) => _progress.forward(),
         onTapUp: (_) => _progress.reverse(),
         onTapCancel: _progress.reverse,
-        onLongPressEnd: (_) => _progress.reverse(),
         child: AnimatedBuilder(
           animation: _progress,
           builder: (context, _) {
@@ -338,8 +479,8 @@ class _HoldToConfirmButtonState extends State<HoldToConfirmButton>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          widget.icon,
+                        HugeIcon(
+                          icon: widget.icon,
                           size: 20,
                           color: scheme.onErrorContainer,
                         ),

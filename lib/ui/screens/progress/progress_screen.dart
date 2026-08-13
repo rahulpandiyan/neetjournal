@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../../state/providers.dart';
 import '../../widgets/widgets.dart';
@@ -20,61 +21,52 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(vertical: 0),
           children: [
-            Text(
-              'Progress',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+            ScreenHeader(
+              title: 'Progress',
+              subtitle: 'Consistency and learning — not maximum hours.',
+              icon: HugeIcons.strokeRoundedChartBarLine,
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Consistency and learning — not maximum hours.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 16),
-            const SectionTitle('Subjects & Chapters'),
-            const SizedBox(height: 4),
-            Text(
-              'Tap a subject to tick off the chapters you have learned.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const ChapterChecklist(),
-            const SizedBox(height: 16),
-            Card(
-              margin: EdgeInsets.zero,
-              child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                leading: Icon(
-                  Icons.assignment_outlined,
-                  color: theme.colorScheme.primary,
-                ),
-                title: Text(
-                  'Test Tracking',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SectionHeader(
+                    title: 'Subjects & Chapters',
+                    icon: HugeIcons.strokeRoundedBook02,
                   ),
-                ),
-                subtitle: const Text(
-                  'Record mock test scores and mistakes → revision',
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const TestsScreen())),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Tap a subject to tick off the chapters you have learned.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const ChapterChecklist(),
+                  const SizedBox(height: 16),
+                ],
               ),
             ),
-            const SizedBox(height: 24),
+            const _TestTrackingCard(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 24),
+                  const SectionHeader(
+                    title: 'This Week',
+                    icon: HugeIcons.strokeRoundedCalendar02,
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
             _buildThisWeek(theme),
+            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -85,7 +77,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
     final stats = ref.watch(weekStatsProvider).valueOrNull;
     if (stats == null) {
       return Card(
-        margin: EdgeInsets.zero,
+        margin: const EdgeInsets.symmetric(horizontal: 20),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Text(
@@ -104,19 +96,12 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
     );
 
     return Card(
-      margin: EdgeInsets.zero,
+      margin: const EdgeInsets.symmetric(horizontal: 20),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'This Week',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
             Row(
               children: [
                 _StatTile(
@@ -148,6 +133,40 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
             _DailyFocusChart(dailyFocus: stats.dailyFocus, maxValue: maxDaily),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _TestTrackingCard extends StatelessWidget {
+  const _TestTrackingCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: IconBubble(
+          icon: HugeIcons.strokeRoundedClipboard,
+          color: theme.colorScheme.primaryContainer,
+          iconColor: theme.colorScheme.onPrimaryContainer,
+        ),
+        title: Text(
+          'Test Tracking',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        subtitle: const Text('Record mock test scores and mistakes → revision'),
+        trailing: HugeIcon(
+          icon: HugeIcons.strokeRoundedArrowRight02,
+          color: theme.colorScheme.outline,
+        ),
+        onTap: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const TestsScreen())),
       ),
     );
   }
