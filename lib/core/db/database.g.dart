@@ -3034,6 +3034,998 @@ class PendingTasksCompanion extends UpdateCompanion<PendingTask> {
   }
 }
 
+class $TestsTable extends Tests with TableInfo<$TestsTable, Test> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TestsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 60,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<String> date = GeneratedColumn<String>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _physicsScoreMeta = const VerificationMeta(
+    'physicsScore',
+  );
+  @override
+  late final GeneratedColumn<int> physicsScore = GeneratedColumn<int>(
+    'physics_score',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _chemistryScoreMeta = const VerificationMeta(
+    'chemistryScore',
+  );
+  @override
+  late final GeneratedColumn<int> chemistryScore = GeneratedColumn<int>(
+    'chemistry_score',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _biologyScoreMeta = const VerificationMeta(
+    'biologyScore',
+  );
+  @override
+  late final GeneratedColumn<int> biologyScore = GeneratedColumn<int>(
+    'biology_score',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _totalScoreMeta = const VerificationMeta(
+    'totalScore',
+  );
+  @override
+  late final GeneratedColumn<int> totalScore = GeneratedColumn<int>(
+    'total_score',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    date,
+    physicsScore,
+    chemistryScore,
+    biologyScore,
+    totalScore,
+    notes,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'tests';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Test> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('physics_score')) {
+      context.handle(
+        _physicsScoreMeta,
+        physicsScore.isAcceptableOrUnknown(
+          data['physics_score']!,
+          _physicsScoreMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_physicsScoreMeta);
+    }
+    if (data.containsKey('chemistry_score')) {
+      context.handle(
+        _chemistryScoreMeta,
+        chemistryScore.isAcceptableOrUnknown(
+          data['chemistry_score']!,
+          _chemistryScoreMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_chemistryScoreMeta);
+    }
+    if (data.containsKey('biology_score')) {
+      context.handle(
+        _biologyScoreMeta,
+        biologyScore.isAcceptableOrUnknown(
+          data['biology_score']!,
+          _biologyScoreMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_biologyScoreMeta);
+    }
+    if (data.containsKey('total_score')) {
+      context.handle(
+        _totalScoreMeta,
+        totalScore.isAcceptableOrUnknown(data['total_score']!, _totalScoreMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_totalScoreMeta);
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Test map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Test(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date'],
+      )!,
+      physicsScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}physics_score'],
+      )!,
+      chemistryScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}chemistry_score'],
+      )!,
+      biologyScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}biology_score'],
+      )!,
+      totalScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_score'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+    );
+  }
+
+  @override
+  $TestsTable createAlias(String alias) {
+    return $TestsTable(attachedDatabase, alias);
+  }
+}
+
+class Test extends DataClass implements Insertable<Test> {
+  final int id;
+  final String name;
+  final String date;
+  final int physicsScore;
+  final int chemistryScore;
+  final int biologyScore;
+  final int totalScore;
+  final String? notes;
+  const Test({
+    required this.id,
+    required this.name,
+    required this.date,
+    required this.physicsScore,
+    required this.chemistryScore,
+    required this.biologyScore,
+    required this.totalScore,
+    this.notes,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['date'] = Variable<String>(date);
+    map['physics_score'] = Variable<int>(physicsScore);
+    map['chemistry_score'] = Variable<int>(chemistryScore);
+    map['biology_score'] = Variable<int>(biologyScore);
+    map['total_score'] = Variable<int>(totalScore);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    return map;
+  }
+
+  TestsCompanion toCompanion(bool nullToAbsent) {
+    return TestsCompanion(
+      id: Value(id),
+      name: Value(name),
+      date: Value(date),
+      physicsScore: Value(physicsScore),
+      chemistryScore: Value(chemistryScore),
+      biologyScore: Value(biologyScore),
+      totalScore: Value(totalScore),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+    );
+  }
+
+  factory Test.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Test(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      date: serializer.fromJson<String>(json['date']),
+      physicsScore: serializer.fromJson<int>(json['physicsScore']),
+      chemistryScore: serializer.fromJson<int>(json['chemistryScore']),
+      biologyScore: serializer.fromJson<int>(json['biologyScore']),
+      totalScore: serializer.fromJson<int>(json['totalScore']),
+      notes: serializer.fromJson<String?>(json['notes']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'date': serializer.toJson<String>(date),
+      'physicsScore': serializer.toJson<int>(physicsScore),
+      'chemistryScore': serializer.toJson<int>(chemistryScore),
+      'biologyScore': serializer.toJson<int>(biologyScore),
+      'totalScore': serializer.toJson<int>(totalScore),
+      'notes': serializer.toJson<String?>(notes),
+    };
+  }
+
+  Test copyWith({
+    int? id,
+    String? name,
+    String? date,
+    int? physicsScore,
+    int? chemistryScore,
+    int? biologyScore,
+    int? totalScore,
+    Value<String?> notes = const Value.absent(),
+  }) => Test(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    date: date ?? this.date,
+    physicsScore: physicsScore ?? this.physicsScore,
+    chemistryScore: chemistryScore ?? this.chemistryScore,
+    biologyScore: biologyScore ?? this.biologyScore,
+    totalScore: totalScore ?? this.totalScore,
+    notes: notes.present ? notes.value : this.notes,
+  );
+  Test copyWithCompanion(TestsCompanion data) {
+    return Test(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      date: data.date.present ? data.date.value : this.date,
+      physicsScore: data.physicsScore.present
+          ? data.physicsScore.value
+          : this.physicsScore,
+      chemistryScore: data.chemistryScore.present
+          ? data.chemistryScore.value
+          : this.chemistryScore,
+      biologyScore: data.biologyScore.present
+          ? data.biologyScore.value
+          : this.biologyScore,
+      totalScore: data.totalScore.present
+          ? data.totalScore.value
+          : this.totalScore,
+      notes: data.notes.present ? data.notes.value : this.notes,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Test(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('date: $date, ')
+          ..write('physicsScore: $physicsScore, ')
+          ..write('chemistryScore: $chemistryScore, ')
+          ..write('biologyScore: $biologyScore, ')
+          ..write('totalScore: $totalScore, ')
+          ..write('notes: $notes')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    date,
+    physicsScore,
+    chemistryScore,
+    biologyScore,
+    totalScore,
+    notes,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Test &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.date == this.date &&
+          other.physicsScore == this.physicsScore &&
+          other.chemistryScore == this.chemistryScore &&
+          other.biologyScore == this.biologyScore &&
+          other.totalScore == this.totalScore &&
+          other.notes == this.notes);
+}
+
+class TestsCompanion extends UpdateCompanion<Test> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<String> date;
+  final Value<int> physicsScore;
+  final Value<int> chemistryScore;
+  final Value<int> biologyScore;
+  final Value<int> totalScore;
+  final Value<String?> notes;
+  const TestsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.date = const Value.absent(),
+    this.physicsScore = const Value.absent(),
+    this.chemistryScore = const Value.absent(),
+    this.biologyScore = const Value.absent(),
+    this.totalScore = const Value.absent(),
+    this.notes = const Value.absent(),
+  });
+  TestsCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    required String date,
+    required int physicsScore,
+    required int chemistryScore,
+    required int biologyScore,
+    required int totalScore,
+    this.notes = const Value.absent(),
+  }) : name = Value(name),
+       date = Value(date),
+       physicsScore = Value(physicsScore),
+       chemistryScore = Value(chemistryScore),
+       biologyScore = Value(biologyScore),
+       totalScore = Value(totalScore);
+  static Insertable<Test> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<String>? date,
+    Expression<int>? physicsScore,
+    Expression<int>? chemistryScore,
+    Expression<int>? biologyScore,
+    Expression<int>? totalScore,
+    Expression<String>? notes,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (date != null) 'date': date,
+      if (physicsScore != null) 'physics_score': physicsScore,
+      if (chemistryScore != null) 'chemistry_score': chemistryScore,
+      if (biologyScore != null) 'biology_score': biologyScore,
+      if (totalScore != null) 'total_score': totalScore,
+      if (notes != null) 'notes': notes,
+    });
+  }
+
+  TestsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<String>? date,
+    Value<int>? physicsScore,
+    Value<int>? chemistryScore,
+    Value<int>? biologyScore,
+    Value<int>? totalScore,
+    Value<String?>? notes,
+  }) {
+    return TestsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      date: date ?? this.date,
+      physicsScore: physicsScore ?? this.physicsScore,
+      chemistryScore: chemistryScore ?? this.chemistryScore,
+      biologyScore: biologyScore ?? this.biologyScore,
+      totalScore: totalScore ?? this.totalScore,
+      notes: notes ?? this.notes,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<String>(date.value);
+    }
+    if (physicsScore.present) {
+      map['physics_score'] = Variable<int>(physicsScore.value);
+    }
+    if (chemistryScore.present) {
+      map['chemistry_score'] = Variable<int>(chemistryScore.value);
+    }
+    if (biologyScore.present) {
+      map['biology_score'] = Variable<int>(biologyScore.value);
+    }
+    if (totalScore.present) {
+      map['total_score'] = Variable<int>(totalScore.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TestsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('date: $date, ')
+          ..write('physicsScore: $physicsScore, ')
+          ..write('chemistryScore: $chemistryScore, ')
+          ..write('biologyScore: $biologyScore, ')
+          ..write('totalScore: $totalScore, ')
+          ..write('notes: $notes')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TestMistakesTable extends TestMistakes
+    with TableInfo<$TestMistakesTable, TestMistake> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TestMistakesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _testIdMeta = const VerificationMeta('testId');
+  @override
+  late final GeneratedColumn<int> testId = GeneratedColumn<int>(
+    'test_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _subjectIdMeta = const VerificationMeta(
+    'subjectId',
+  );
+  @override
+  late final GeneratedColumn<int> subjectId = GeneratedColumn<int>(
+    'subject_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<MistakeCategory, String>
+  category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  ).withConverter<MistakeCategory>($TestMistakesTable.$convertercategory);
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 200,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isRevisionedMeta = const VerificationMeta(
+    'isRevisioned',
+  );
+  @override
+  late final GeneratedColumn<bool> isRevisioned = GeneratedColumn<bool>(
+    'is_revisioned',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_revisioned" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    testId,
+    subjectId,
+    category,
+    description,
+    isRevisioned,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'test_mistakes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TestMistake> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('test_id')) {
+      context.handle(
+        _testIdMeta,
+        testId.isAcceptableOrUnknown(data['test_id']!, _testIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_testIdMeta);
+    }
+    if (data.containsKey('subject_id')) {
+      context.handle(
+        _subjectIdMeta,
+        subjectId.isAcceptableOrUnknown(data['subject_id']!, _subjectIdMeta),
+      );
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('is_revisioned')) {
+      context.handle(
+        _isRevisionedMeta,
+        isRevisioned.isAcceptableOrUnknown(
+          data['is_revisioned']!,
+          _isRevisionedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TestMistake map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TestMistake(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      testId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}test_id'],
+      )!,
+      subjectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}subject_id'],
+      ),
+      category: $TestMistakesTable.$convertercategory.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}category'],
+        )!,
+      ),
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      )!,
+      isRevisioned: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_revisioned'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $TestMistakesTable createAlias(String alias) {
+    return $TestMistakesTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<MistakeCategory, String, String>
+  $convertercategory = const EnumNameConverter<MistakeCategory>(
+    MistakeCategory.values,
+  );
+}
+
+class TestMistake extends DataClass implements Insertable<TestMistake> {
+  final int id;
+  final int testId;
+  final int? subjectId;
+  final MistakeCategory category;
+  final String description;
+  final bool isRevisioned;
+  final DateTime createdAt;
+  const TestMistake({
+    required this.id,
+    required this.testId,
+    this.subjectId,
+    required this.category,
+    required this.description,
+    required this.isRevisioned,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['test_id'] = Variable<int>(testId);
+    if (!nullToAbsent || subjectId != null) {
+      map['subject_id'] = Variable<int>(subjectId);
+    }
+    {
+      map['category'] = Variable<String>(
+        $TestMistakesTable.$convertercategory.toSql(category),
+      );
+    }
+    map['description'] = Variable<String>(description);
+    map['is_revisioned'] = Variable<bool>(isRevisioned);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  TestMistakesCompanion toCompanion(bool nullToAbsent) {
+    return TestMistakesCompanion(
+      id: Value(id),
+      testId: Value(testId),
+      subjectId: subjectId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(subjectId),
+      category: Value(category),
+      description: Value(description),
+      isRevisioned: Value(isRevisioned),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory TestMistake.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TestMistake(
+      id: serializer.fromJson<int>(json['id']),
+      testId: serializer.fromJson<int>(json['testId']),
+      subjectId: serializer.fromJson<int?>(json['subjectId']),
+      category: $TestMistakesTable.$convertercategory.fromJson(
+        serializer.fromJson<String>(json['category']),
+      ),
+      description: serializer.fromJson<String>(json['description']),
+      isRevisioned: serializer.fromJson<bool>(json['isRevisioned']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'testId': serializer.toJson<int>(testId),
+      'subjectId': serializer.toJson<int?>(subjectId),
+      'category': serializer.toJson<String>(
+        $TestMistakesTable.$convertercategory.toJson(category),
+      ),
+      'description': serializer.toJson<String>(description),
+      'isRevisioned': serializer.toJson<bool>(isRevisioned),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  TestMistake copyWith({
+    int? id,
+    int? testId,
+    Value<int?> subjectId = const Value.absent(),
+    MistakeCategory? category,
+    String? description,
+    bool? isRevisioned,
+    DateTime? createdAt,
+  }) => TestMistake(
+    id: id ?? this.id,
+    testId: testId ?? this.testId,
+    subjectId: subjectId.present ? subjectId.value : this.subjectId,
+    category: category ?? this.category,
+    description: description ?? this.description,
+    isRevisioned: isRevisioned ?? this.isRevisioned,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  TestMistake copyWithCompanion(TestMistakesCompanion data) {
+    return TestMistake(
+      id: data.id.present ? data.id.value : this.id,
+      testId: data.testId.present ? data.testId.value : this.testId,
+      subjectId: data.subjectId.present ? data.subjectId.value : this.subjectId,
+      category: data.category.present ? data.category.value : this.category,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      isRevisioned: data.isRevisioned.present
+          ? data.isRevisioned.value
+          : this.isRevisioned,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TestMistake(')
+          ..write('id: $id, ')
+          ..write('testId: $testId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('category: $category, ')
+          ..write('description: $description, ')
+          ..write('isRevisioned: $isRevisioned, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    testId,
+    subjectId,
+    category,
+    description,
+    isRevisioned,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TestMistake &&
+          other.id == this.id &&
+          other.testId == this.testId &&
+          other.subjectId == this.subjectId &&
+          other.category == this.category &&
+          other.description == this.description &&
+          other.isRevisioned == this.isRevisioned &&
+          other.createdAt == this.createdAt);
+}
+
+class TestMistakesCompanion extends UpdateCompanion<TestMistake> {
+  final Value<int> id;
+  final Value<int> testId;
+  final Value<int?> subjectId;
+  final Value<MistakeCategory> category;
+  final Value<String> description;
+  final Value<bool> isRevisioned;
+  final Value<DateTime> createdAt;
+  const TestMistakesCompanion({
+    this.id = const Value.absent(),
+    this.testId = const Value.absent(),
+    this.subjectId = const Value.absent(),
+    this.category = const Value.absent(),
+    this.description = const Value.absent(),
+    this.isRevisioned = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  TestMistakesCompanion.insert({
+    this.id = const Value.absent(),
+    required int testId,
+    this.subjectId = const Value.absent(),
+    required MistakeCategory category,
+    required String description,
+    this.isRevisioned = const Value.absent(),
+    required DateTime createdAt,
+  }) : testId = Value(testId),
+       category = Value(category),
+       description = Value(description),
+       createdAt = Value(createdAt);
+  static Insertable<TestMistake> custom({
+    Expression<int>? id,
+    Expression<int>? testId,
+    Expression<int>? subjectId,
+    Expression<String>? category,
+    Expression<String>? description,
+    Expression<bool>? isRevisioned,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (testId != null) 'test_id': testId,
+      if (subjectId != null) 'subject_id': subjectId,
+      if (category != null) 'category': category,
+      if (description != null) 'description': description,
+      if (isRevisioned != null) 'is_revisioned': isRevisioned,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  TestMistakesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? testId,
+    Value<int?>? subjectId,
+    Value<MistakeCategory>? category,
+    Value<String>? description,
+    Value<bool>? isRevisioned,
+    Value<DateTime>? createdAt,
+  }) {
+    return TestMistakesCompanion(
+      id: id ?? this.id,
+      testId: testId ?? this.testId,
+      subjectId: subjectId ?? this.subjectId,
+      category: category ?? this.category,
+      description: description ?? this.description,
+      isRevisioned: isRevisioned ?? this.isRevisioned,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (testId.present) {
+      map['test_id'] = Variable<int>(testId.value);
+    }
+    if (subjectId.present) {
+      map['subject_id'] = Variable<int>(subjectId.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(
+        $TestMistakesTable.$convertercategory.toSql(category.value),
+      );
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (isRevisioned.present) {
+      map['is_revisioned'] = Variable<bool>(isRevisioned.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TestMistakesCompanion(')
+          ..write('id: $id, ')
+          ..write('testId: $testId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('category: $category, ')
+          ..write('description: $description, ')
+          ..write('isRevisioned: $isRevisioned, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $AppSettingsTable extends AppSettings
     with TableInfo<$AppSettingsTable, AppSetting> {
   @override
@@ -3251,6 +4243,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $StudySessionsTable studySessions = $StudySessionsTable(this);
   late final $JournalEntriesTable journalEntries = $JournalEntriesTable(this);
   late final $PendingTasksTable pendingTasks = $PendingTasksTable(this);
+  late final $TestsTable tests = $TestsTable(this);
+  late final $TestMistakesTable testMistakes = $TestMistakesTable(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -3263,6 +4257,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     studySessions,
     journalEntries,
     pendingTasks,
+    tests,
+    testMistakes,
     appSettings,
   ];
 }
@@ -4782,6 +5778,495 @@ typedef $$PendingTasksTableProcessedTableManager =
       PendingTask,
       PrefetchHooks Function()
     >;
+typedef $$TestsTableCreateCompanionBuilder =
+    TestsCompanion Function({
+      Value<int> id,
+      required String name,
+      required String date,
+      required int physicsScore,
+      required int chemistryScore,
+      required int biologyScore,
+      required int totalScore,
+      Value<String?> notes,
+    });
+typedef $$TestsTableUpdateCompanionBuilder =
+    TestsCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<String> date,
+      Value<int> physicsScore,
+      Value<int> chemistryScore,
+      Value<int> biologyScore,
+      Value<int> totalScore,
+      Value<String?> notes,
+    });
+
+class $$TestsTableFilterComposer extends Composer<_$AppDatabase, $TestsTable> {
+  $$TestsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get physicsScore => $composableBuilder(
+    column: $table.physicsScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get chemistryScore => $composableBuilder(
+    column: $table.chemistryScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get biologyScore => $composableBuilder(
+    column: $table.biologyScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalScore => $composableBuilder(
+    column: $table.totalScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TestsTableOrderingComposer
+    extends Composer<_$AppDatabase, $TestsTable> {
+  $$TestsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get physicsScore => $composableBuilder(
+    column: $table.physicsScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get chemistryScore => $composableBuilder(
+    column: $table.chemistryScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get biologyScore => $composableBuilder(
+    column: $table.biologyScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get totalScore => $composableBuilder(
+    column: $table.totalScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TestsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TestsTable> {
+  $$TestsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<int> get physicsScore => $composableBuilder(
+    column: $table.physicsScore,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get chemistryScore => $composableBuilder(
+    column: $table.chemistryScore,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get biologyScore => $composableBuilder(
+    column: $table.biologyScore,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get totalScore => $composableBuilder(
+    column: $table.totalScore,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+}
+
+class $$TestsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TestsTable,
+          Test,
+          $$TestsTableFilterComposer,
+          $$TestsTableOrderingComposer,
+          $$TestsTableAnnotationComposer,
+          $$TestsTableCreateCompanionBuilder,
+          $$TestsTableUpdateCompanionBuilder,
+          (Test, BaseReferences<_$AppDatabase, $TestsTable, Test>),
+          Test,
+          PrefetchHooks Function()
+        > {
+  $$TestsTableTableManager(_$AppDatabase db, $TestsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TestsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TestsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TestsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> date = const Value.absent(),
+                Value<int> physicsScore = const Value.absent(),
+                Value<int> chemistryScore = const Value.absent(),
+                Value<int> biologyScore = const Value.absent(),
+                Value<int> totalScore = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+              }) => TestsCompanion(
+                id: id,
+                name: name,
+                date: date,
+                physicsScore: physicsScore,
+                chemistryScore: chemistryScore,
+                biologyScore: biologyScore,
+                totalScore: totalScore,
+                notes: notes,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                required String date,
+                required int physicsScore,
+                required int chemistryScore,
+                required int biologyScore,
+                required int totalScore,
+                Value<String?> notes = const Value.absent(),
+              }) => TestsCompanion.insert(
+                id: id,
+                name: name,
+                date: date,
+                physicsScore: physicsScore,
+                chemistryScore: chemistryScore,
+                biologyScore: biologyScore,
+                totalScore: totalScore,
+                notes: notes,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TestsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TestsTable,
+      Test,
+      $$TestsTableFilterComposer,
+      $$TestsTableOrderingComposer,
+      $$TestsTableAnnotationComposer,
+      $$TestsTableCreateCompanionBuilder,
+      $$TestsTableUpdateCompanionBuilder,
+      (Test, BaseReferences<_$AppDatabase, $TestsTable, Test>),
+      Test,
+      PrefetchHooks Function()
+    >;
+typedef $$TestMistakesTableCreateCompanionBuilder =
+    TestMistakesCompanion Function({
+      Value<int> id,
+      required int testId,
+      Value<int?> subjectId,
+      required MistakeCategory category,
+      required String description,
+      Value<bool> isRevisioned,
+      required DateTime createdAt,
+    });
+typedef $$TestMistakesTableUpdateCompanionBuilder =
+    TestMistakesCompanion Function({
+      Value<int> id,
+      Value<int> testId,
+      Value<int?> subjectId,
+      Value<MistakeCategory> category,
+      Value<String> description,
+      Value<bool> isRevisioned,
+      Value<DateTime> createdAt,
+    });
+
+class $$TestMistakesTableFilterComposer
+    extends Composer<_$AppDatabase, $TestMistakesTable> {
+  $$TestMistakesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get testId => $composableBuilder(
+    column: $table.testId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<MistakeCategory, MistakeCategory, String>
+  get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isRevisioned => $composableBuilder(
+    column: $table.isRevisioned,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TestMistakesTableOrderingComposer
+    extends Composer<_$AppDatabase, $TestMistakesTable> {
+  $$TestMistakesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get testId => $composableBuilder(
+    column: $table.testId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isRevisioned => $composableBuilder(
+    column: $table.isRevisioned,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TestMistakesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TestMistakesTable> {
+  $$TestMistakesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get testId =>
+      $composableBuilder(column: $table.testId, builder: (column) => column);
+
+  GeneratedColumn<int> get subjectId =>
+      $composableBuilder(column: $table.subjectId, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<MistakeCategory, String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isRevisioned => $composableBuilder(
+    column: $table.isRevisioned,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$TestMistakesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TestMistakesTable,
+          TestMistake,
+          $$TestMistakesTableFilterComposer,
+          $$TestMistakesTableOrderingComposer,
+          $$TestMistakesTableAnnotationComposer,
+          $$TestMistakesTableCreateCompanionBuilder,
+          $$TestMistakesTableUpdateCompanionBuilder,
+          (
+            TestMistake,
+            BaseReferences<_$AppDatabase, $TestMistakesTable, TestMistake>,
+          ),
+          TestMistake,
+          PrefetchHooks Function()
+        > {
+  $$TestMistakesTableTableManager(_$AppDatabase db, $TestMistakesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TestMistakesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TestMistakesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TestMistakesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> testId = const Value.absent(),
+                Value<int?> subjectId = const Value.absent(),
+                Value<MistakeCategory> category = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<bool> isRevisioned = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => TestMistakesCompanion(
+                id: id,
+                testId: testId,
+                subjectId: subjectId,
+                category: category,
+                description: description,
+                isRevisioned: isRevisioned,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int testId,
+                Value<int?> subjectId = const Value.absent(),
+                required MistakeCategory category,
+                required String description,
+                Value<bool> isRevisioned = const Value.absent(),
+                required DateTime createdAt,
+              }) => TestMistakesCompanion.insert(
+                id: id,
+                testId: testId,
+                subjectId: subjectId,
+                category: category,
+                description: description,
+                isRevisioned: isRevisioned,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TestMistakesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TestMistakesTable,
+      TestMistake,
+      $$TestMistakesTableFilterComposer,
+      $$TestMistakesTableOrderingComposer,
+      $$TestMistakesTableAnnotationComposer,
+      $$TestMistakesTableCreateCompanionBuilder,
+      $$TestMistakesTableUpdateCompanionBuilder,
+      (
+        TestMistake,
+        BaseReferences<_$AppDatabase, $TestMistakesTable, TestMistake>,
+      ),
+      TestMistake,
+      PrefetchHooks Function()
+    >;
 typedef $$AppSettingsTableCreateCompanionBuilder =
     AppSettingsCompanion Function({
       required String key,
@@ -4937,6 +6422,10 @@ class $AppDatabaseManager {
       $$JournalEntriesTableTableManager(_db, _db.journalEntries);
   $$PendingTasksTableTableManager get pendingTasks =>
       $$PendingTasksTableTableManager(_db, _db.pendingTasks);
+  $$TestsTableTableManager get tests =>
+      $$TestsTableTableManager(_db, _db.tests);
+  $$TestMistakesTableTableManager get testMistakes =>
+      $$TestMistakesTableTableManager(_db, _db.testMistakes);
   $$AppSettingsTableTableManager get appSettings =>
       $$AppSettingsTableTableManager(_db, _db.appSettings);
 }

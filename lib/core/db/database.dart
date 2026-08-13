@@ -19,14 +19,19 @@ const String defaultExamDate = '2027-05-02';
     StudySessions,
     JournalEntries,
     PendingTasks,
+    Tests,
+    TestMistakes,
     AppSettings,
   ],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(driftDatabase(name: 'neet_journal'));
+  /// [executor] is injected in tests (e.g. an in-memory database); the app
+  /// uses the on-device drift database by default.
+  AppDatabase([QueryExecutor? executor])
+    : super(executor ?? driftDatabase(name: 'neet_journal'));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   /// Seeds subjects, chapters, the default timetable and default settings.
   /// Runs inside the first successful migration so fresh installs are ready.
@@ -35,6 +40,12 @@ class AppDatabase extends _$AppDatabase {
     onCreate: (m) async {
       await m.createAll();
       await _seed();
+    },
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.createTable(tests);
+        await m.createTable(testMistakes);
+      }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');

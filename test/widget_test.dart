@@ -6,9 +6,7 @@ import 'package:neet_journal/ui/widgets/countdown_card.dart';
 void main() {
   testWidgets('CountdownCard shows remaining days', (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(body: CountdownCard(daysLeft: 287)),
-      ),
+      const MaterialApp(home: Scaffold(body: CountdownCard(daysLeft: 287))),
     );
 
     expect(find.text('287'), findsOneWidget);
@@ -18,9 +16,7 @@ void main() {
 
   testWidgets('CountdownCard never shows negative days', (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(body: CountdownCard(daysLeft: -3)),
-      ),
+      const MaterialApp(home: Scaffold(body: CountdownCard(daysLeft: -3))),
     );
 
     expect(find.text('0'), findsOneWidget);

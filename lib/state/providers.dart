@@ -11,6 +11,7 @@ import '../data/repositories/pending_repository.dart';
 import '../data/repositories/progress_repository.dart';
 import '../data/repositories/session_repository.dart';
 import '../data/repositories/settings_repository.dart';
+import '../data/repositories/test_repository.dart';
 import '../data/repositories/timetable_repository.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
@@ -37,6 +38,10 @@ final pendingRepositoryProvider = Provider<PendingRepository>(
 
 final progressRepositoryProvider = Provider<ProgressRepository>(
   (ref) => ProgressRepository(ref.watch(databaseProvider)),
+);
+
+final testRepositoryProvider = Provider<TestRepository>(
+  (ref) => TestRepository(ref.watch(databaseProvider)),
 );
 
 final settingsRepositoryProvider = Provider<SettingsRepository>(
@@ -143,6 +148,19 @@ final chaptersBySubjectProvider = StreamProvider<Map<int, List<Chapter>>>((
 /// Live aggregate stats for the current week.
 final weekStatsProvider = StreamProvider<WeekStats>((ref) {
   return ref.watch(progressRepositoryProvider).watchWeekStats();
+});
+
+/// All recorded mock tests, newest first.
+final testsProvider = StreamProvider<List<Test>>((ref) {
+  return ref.watch(testRepositoryProvider).watchTests();
+});
+
+/// Mistakes recorded against a single test.
+final testMistakesProvider = StreamProvider.family<List<TestMistake>, int>((
+  ref,
+  testId,
+) {
+  return ref.watch(testRepositoryProvider).watchMistakes(testId);
 });
 
 final journalTodayProvider = StreamProvider<JournalEntry?>((ref) {

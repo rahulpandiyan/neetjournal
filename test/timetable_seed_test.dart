@@ -8,11 +8,7 @@ void main() {
   const b = 3;
 
   group('weekday template', () {
-    final slots = buildWeekdaySlots(
-      physicsId: p,
-      chemistryId: c,
-      biologyId: b,
-    );
+    final slots = buildWeekdaySlots(physicsId: p, chemistryId: c, biologyId: b);
 
     test('has exactly 13 slots per day for 6 days', () {
       expect(slots.length, 13 * 6);
@@ -54,25 +50,21 @@ void main() {
   });
 
   group('sunday template', () {
-    final sunday = buildSundaySlots(
-      physicsId: p,
-      chemistryId: c,
-      biologyId: b,
-    );
+    final sunday = buildSundaySlots(physicsId: p, chemistryId: c, biologyId: b);
 
     test('contains weekly planning and sleep', () {
-      expect(
-        sunday.any((s) => s.type == ActivityType.planning),
-        isTrue,
-      );
+      expect(sunday.any((s) => s.type == ActivityType.planning), isTrue);
       expect(sunday.last.type, ActivityType.sleep);
       expect(sunday.last.startMin, 22 * 60);
     });
 
     test('study-like items are optional', () {
       for (final s in sunday.where((s) => s.type.isStudyLike)) {
-        expect(s.isOptional, isTrue,
-            reason: '${s.title} should be optional on Sunday');
+        expect(
+          s.isOptional,
+          isTrue,
+          reason: '${s.title} should be optional on Sunday',
+        );
       }
     });
 

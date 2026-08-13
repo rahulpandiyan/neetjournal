@@ -129,6 +129,55 @@ class PendingTasks extends Table {
   DateTimeColumn get completedAt => dateTime().nullable()();
 }
 
+class Tests extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().withLength(min: 1, max: 60)();
+  TextColumn get date => text()();
+  IntColumn get physicsScore => integer()();
+  IntColumn get chemistryScore => integer()();
+  IntColumn get biologyScore => integer()();
+  IntColumn get totalScore => integer()();
+  TextColumn get notes => text().nullable()();
+}
+
+enum MistakeCategory {
+  conceptNotKnown,
+  forgotConcept,
+  calculation,
+  misread,
+  silly,
+  guess,
+}
+
+extension MistakeCategoryLabel on MistakeCategory {
+  String get label {
+    switch (this) {
+      case MistakeCategory.conceptNotKnown:
+        return 'Concept not known';
+      case MistakeCategory.forgotConcept:
+        return 'Forgot concept';
+      case MistakeCategory.calculation:
+        return 'Calculation mistake';
+      case MistakeCategory.misread:
+        return 'Misread question';
+      case MistakeCategory.silly:
+        return 'Silly mistake';
+      case MistakeCategory.guess:
+        return 'Guess';
+    }
+  }
+}
+
+class TestMistakes extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get testId => integer().references(Tests, #id)();
+  IntColumn get subjectId => integer().references(Subjects, #id).nullable()();
+  TextColumn get category => textEnum<MistakeCategory>()();
+  TextColumn get description => text().withLength(min: 1, max: 200)();
+  BoolColumn get isRevisioned => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime()();
+}
+
 class AppSettings extends Table {
   TextColumn get key => text()();
   TextColumn get value => text()();

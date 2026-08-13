@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/db/database.dart';
 import '../../../core/db/tables.dart';
 import '../../../state/providers.dart';
+import '../tests/tests_screen.dart';
 
 class ProgressScreen extends ConsumerStatefulWidget {
   const ProgressScreen({super.key});
@@ -39,6 +40,33 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
             ),
             const SizedBox(height: 16),
             _buildSubjectCards(theme),
+            const SizedBox(height: 16),
+            Card(
+              margin: EdgeInsets.zero,
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                leading: Icon(
+                  Icons.assignment_outlined,
+                  color: theme.colorScheme.primary,
+                ),
+                title: Text(
+                  'Test Tracking',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                subtitle: const Text(
+                  'Record mock test scores and mistakes → revision',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const TestsScreen())),
+              ),
+            ),
             const SizedBox(height: 24),
             _buildThisWeek(theme),
           ],
