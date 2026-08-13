@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/db/database.dart';
 import '../core/db/tables.dart';
+import '../core/services/notifications_service.dart';
 import '../data/repositories/journal_repository.dart';
 import '../data/repositories/pending_repository.dart';
+import '../data/repositories/progress_repository.dart';
 import '../data/repositories/session_repository.dart';
 import '../data/repositories/settings_repository.dart';
 import '../data/repositories/timetable_repository.dart';
@@ -33,9 +35,35 @@ final pendingRepositoryProvider = Provider<PendingRepository>(
   (ref) => PendingRepository(ref.watch(databaseProvider)),
 );
 
+final progressRepositoryProvider = Provider<ProgressRepository>(
+  (ref) => ProgressRepository(ref.watch(databaseProvider)),
+);
+
 final settingsRepositoryProvider = Provider<SettingsRepository>(
   (ref) => SettingsRepository(ref.watch(databaseProvider)),
 );
+
+final notificationsServiceProvider = Provider<NotificationsService>(
+  (ref) => NotificationsService.instance,
+);
+
+final notificationPrefsProvider = StreamProvider<({bool study, bool sleep})>((
+  ref,
+) {
+  return ref.watch(settingsRepositoryProvider).watchNotificationPrefs();
+});
+
+/// Rebuilds scheduled notifications from the weekly template + prefs.
+Future<void> syncNotifications(WidgetRef ref) async {
+  final service = ref.read(notificationsServiceProvider);
+  final template = await ref.read(templateByDayProvider.future);
+  final prefs = await ref.read(notificationPrefsProvider.future);
+  await service.rescheduleFromTemplate(
+    template: template,
+    studyReminders: prefs.study,
+    sleepReminder: prefs.sleep,
+  );
+}
 
 final subjectsByIdProvider = FutureProvider<Map<int, Subject>>((ref) async {
   final repo = ref.watch(timetableRepositoryProvider);
@@ -73,6 +101,15 @@ final templateByDayProvider = StreamProvider<Map<int, List<TimetableSlot>>>((
   });
 });
 
+/// A single day's merged view: weekly template with that day's one-off
+/// overrides (moves, Edit Today) applied.
+final daySlotsProvider = StreamProvider.family<List<TimetableSlot>, DateTime>((
+  ref,
+  day,
+) {
+  return ref.watch(timetableRepositoryProvider).watchDay(day);
+});
+
 /// Per-subject chapter progress: (total, learned).
 final chapterProgressProvider = StreamProvider<Map<int, (int, int)>>((ref) {
   final db = ref.watch(databaseProvider);
@@ -87,6 +124,25 @@ final chapterProgressProvider = StreamProvider<Map<int, (int, int)>>((ref) {
     }
     return map;
   });
+});
+
+/// Chapters grouped by subject, in seed order.
+final chaptersBySubjectProvider = StreamProvider<Map<int, List<Chapter>>>((
+  ref,
+) {
+  final db = ref.watch(databaseProvider);
+  return db.select(db.chapters).watch().map((rows) {
+    final map = <int, List<Chapter>>{};
+    for (final c in rows) {
+      map.putIfAbsent(c.subjectId, () => []).add(c);
+    }
+    return map;
+  });
+});
+
+/// Live aggregate stats for the current week.
+final weekStatsProvider = StreamProvider<WeekStats>((ref) {
+  return ref.watch(progressRepositoryProvider).watchWeekStats();
 });
 
 final journalTodayProvider = StreamProvider<JournalEntry?>((ref) {

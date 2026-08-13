@@ -64,6 +64,25 @@ class SettingsRepository {
     await _db.setSetting('waterReminderMinutes', '$minutes');
   }
 
+  Stream<({bool study, bool sleep})> watchNotificationPrefs() {
+    return _db.select(_db.appSettings).watch().map((rows) {
+      final byKey = {for (final r in rows) r.key: r.value};
+      return (
+        study: (byKey['studyRemindersEnabled'] ?? '1') == '1',
+        sleep: (byKey['sleepReminderEnabled'] ?? '1') == '1',
+      );
+    });
+  }
+
+  Future<void> setNotificationPrefs({bool? study, bool? sleep}) async {
+    if (study != null) {
+      await _db.setSetting('studyRemindersEnabled', study ? '1' : '0');
+    }
+    if (sleep != null) {
+      await _db.setSetting('sleepReminderEnabled', sleep ? '1' : '0');
+    }
+  }
+
   Future<String> preset() async {
     return await _db.getSetting('focusPreset') ?? '50/10';
   }

@@ -108,6 +108,99 @@ class TimetableRepository {
     return (_db.delete(_db.timetableSlots)..where((t) => t.id.equals(id))).go();
   }
 
+  /// Updates an existing slot (template or one-off) in place.
+  Future<void> updateSlot({
+    required int id,
+    required int startMin,
+    required int endMin,
+    int? subjectId,
+    required ActivityType activityType,
+    required String title,
+    String? target,
+  }) {
+    return (_db.update(
+      _db.timetableSlots,
+    )..where((t) => t.id.equals(id))).write(
+      TimetableSlotsCompanion(
+        startMin: Value(startMin),
+        endMin: Value(endMin),
+        subjectId: Value(subjectId),
+        activityType: Value(activityType),
+        title: Value(title),
+        target: Value(target),
+      ),
+    );
+  }
+
+  /// Adds a recurring slot to the weekly template for [dayOfWeek].
+  Future<int> addTemplateSlot({
+    required int dayOfWeek,
+    required int startMin,
+    required int endMin,
+    int? subjectId,
+    required ActivityType activityType,
+    required String title,
+    String? target,
+  }) {
+    return _db
+        .into(_db.timetableSlots)
+        .insert(
+          TimetableSlotsCompanion.insert(
+            dayOfWeek: Value(dayOfWeek),
+            date: const Value(null),
+            templateSlotId: const Value(null),
+            startMin: startMin,
+            endMin: endMin,
+            subjectId: Value(subjectId),
+            activityType: activityType,
+            title: title,
+            target: Value(target),
+            isRecurring: true,
+            isOptional: const Value(false),
+          ),
+        );
+  }
+
+  /// Copies a day's weekly template into date-specific one-offs so today can
+  /// be edited without touching the weekly schedule.
+  Future<void> copyTemplateToDate(DateTime day) async {
+    final dateStr = dateToStr(day);
+    final existing = await (_db.select(
+      _db.timetableSlots,
+    )..where((t) => t.date.equals(dateStr))).get();
+    final overridden = existing.map((r) => r.templateSlotId).toSet();
+    final template = await templateForDay(day.weekday);
+    await _db.batch((b) {
+      for (final t in template) {
+        if (overridden.contains(t.id)) continue;
+        b.insert(
+          _db.timetableSlots,
+          TimetableSlotsCompanion.insert(
+            dayOfWeek: const Value(null),
+            date: Value(dateStr),
+            templateSlotId: Value(t.id),
+            startMin: t.startMin,
+            endMin: t.endMin,
+            subjectId: Value(t.subjectId),
+            activityType: t.activityType,
+            title: t.title,
+            target: Value(t.target),
+            isRecurring: false,
+            isOptional: Value(t.isOptional),
+          ),
+        );
+      }
+    });
+  }
+
+  /// Removes all one-off overrides for [day], reverting to the weekly template.
+  Future<void> clearDateOverrides(DateTime day) async {
+    final dateStr = dateToStr(day);
+    await (_db.delete(
+      _db.timetableSlots,
+    )..where((t) => t.date.equals(dateStr))).go();
+  }
+
   Future<Map<int, Subject>> subjectsById() async {
     final rows = await _db.select(_db.subjects).get();
     return {for (final s in rows) s.id: s};

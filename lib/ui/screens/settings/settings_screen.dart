@@ -28,17 +28,8 @@ class SettingsScreen extends ConsumerWidget {
             const Divider(),
             const _WaterReminderTile(),
             const Divider(),
-            Card(
-              margin: EdgeInsets.zero,
-              child: const ListTile(
-                leading: Icon(Icons.notifications_none),
-                title: Text('Notifications'),
-                subtitle: Text(
-                  'Study, rest and sleep reminders arrive in the next milestone.',
-                ),
-                enabled: false,
-              ),
-            ),
+            const _NotificationsTile(),
+            const Divider(),
             const SizedBox(height: 24),
             Text(
               'The app is a coach, not a controller.\nMissed sessions? Just decide what to do next — no guilt.',
@@ -275,6 +266,73 @@ class _WaterReminderTile extends ConsumerWidget {
                 ),
               ),
             const SizedBox(height: 8),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _NotificationsTile extends ConsumerWidget {
+  const _NotificationsTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final prefsAsync = ref.watch(notificationPrefsProvider);
+    return prefsAsync.when(
+      loading: () => const ListTile(
+        leading: Icon(Icons.notifications_none),
+        title: Text('Notifications'),
+        subtitle: Text('Loading...'),
+      ),
+      error: (e, _) => ListTile(title: Text('$e')),
+      data: (prefs) {
+        final repo = ref.read(settingsRepositoryProvider);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SwitchListTile(
+              secondary: const Icon(Icons.schedule_outlined),
+              title: const Text('Study reminders'),
+              subtitle: const Text('A nudge when each study slot starts'),
+              value: prefs.study,
+              onChanged: (v) async {
+                await repo.setNotificationPrefs(study: v);
+                await syncNotifications(ref);
+              },
+            ),
+            SwitchListTile(
+              secondary: const Icon(Icons.nightlight_outlined),
+              title: const Text('Sleep reminder'),
+              subtitle: const Text('Time to sleep and reset for tomorrow'),
+              value: prefs.sleep,
+              onChanged: (v) async {
+                await repo.setNotificationPrefs(sleep: v);
+                await syncNotifications(ref);
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        ref
+                            .read(notificationsServiceProvider)
+                            .showImmediately(
+                              title: 'NEET Journal',
+                              body: 'Reminders are working. Keep going!',
+                            );
+                      },
+                      icon: const Icon(Icons.notifications_active_outlined),
+                      label: const Text('Send test reminder'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
           ],
         );
       },

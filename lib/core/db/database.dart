@@ -167,6 +167,14 @@ class AppDatabase extends _$AppDatabase {
       AppSettingsCompanion.insert(key: 'waterReminderMinutes', value: '30'),
       mode: InsertMode.insertOrIgnore,
     );
+    await into(appSettings).insert(
+      AppSettingsCompanion.insert(key: 'studyRemindersEnabled', value: '1'),
+      mode: InsertMode.insertOrIgnore,
+    );
+    await into(appSettings).insert(
+      AppSettingsCompanion.insert(key: 'sleepReminderEnabled', value: '1'),
+      mode: InsertMode.insertOrIgnore,
+    );
   }
 
   /// The configured exam date, defaulting to NEET 2027.
@@ -189,5 +197,11 @@ class AppDatabase extends _$AppDatabase {
       AppSettingsCompanion.insert(key: key, value: value),
       mode: InsertMode.insertOrReplace,
     );
+  }
+
+  /// Wipes the timetable (template and one-offs) and reseeds the default.
+  Future<void> restoreDefaultTimetable() async {
+    await delete(timetableSlots).go();
+    await _seedTimetable();
   }
 }
