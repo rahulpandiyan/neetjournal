@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -62,6 +64,12 @@ class _ForegroundReminderListener extends ConsumerWidget {
     ref.listen<ForegroundReminder?>(foregroundReminderProvider, (_, next) {
       if (next == null) return;
       final reminder = next;
+      unawaited(
+        ref
+            .read(notificationsServiceProvider)
+            .showImmediately(title: reminder.title, body: reminder.body)
+            .catchError((_) {}),
+      );
       showDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(

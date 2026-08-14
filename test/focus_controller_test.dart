@@ -138,6 +138,55 @@ void main() {
     expect(st().breakDuration, const Duration(minutes: 10));
   });
 
+  test('I am tired: stretch/nap break carries its label', () {
+    controller.startFocus(
+      subjectName: 'Biology',
+      title: 'z',
+      focusMinutes: 50,
+      breakMinutes: 10,
+    );
+    controller.tiredBreak(5, label: 'STRETCH');
+    expect(phase(), FocusPhase.breaking);
+    expect(st().breakDuration, const Duration(minutes: 5));
+    expect(st().breakLabel, 'STRETCH');
+  });
+
+  test('natural break after a tired break uses the configured length, not the '
+      'tired-break length', () {
+    controller.startFocus(
+      subjectName: 'Physics',
+      title: 'x',
+      focusMinutes: 50,
+      breakMinutes: 10,
+    );
+    expect(st().configuredBreakDuration, const Duration(minutes: 10));
+
+    controller.tiredBreak(5);
+    expect(st().breakDuration, const Duration(minutes: 5));
+    expect(st().configuredBreakDuration, const Duration(minutes: 10));
+
+    controller.skipBreak();
+    expect(phase(), FocusPhase.focusing);
+    expect(st().breakDuration, const Duration(minutes: 10));
+
+    controller.finish();
+    controller.startBreak();
+    expect(st().breakDuration, const Duration(minutes: 10));
+    expect(st().endTime!.difference(DateTime.now()).inSeconds, closeTo(600, 2));
+  });
+
+  test('post-completion startBreak clears the break label', () {
+    controller.startFocus(
+      subjectName: 'Biology',
+      title: 'z',
+      focusMinutes: 50,
+      breakMinutes: 10,
+    );
+    controller.finish();
+    controller.startBreak();
+    expect(st().breakLabel, isNull);
+  });
+
   test('I am tired: end session finishes', () {
     controller.startFocus(
       subjectName: 'Biology',

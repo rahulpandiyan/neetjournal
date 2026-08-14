@@ -7,6 +7,7 @@ import 'package:heroicons/heroicons.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../core/db/tables.dart';
 import '../../state/focus_controller.dart';
 import '../../state/providers.dart';
 import '../../ui/widgets/widgets.dart';
@@ -71,6 +72,11 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      // The session is never silently abandonable: the sheet must be wrapped
+      // up (it either updates the auto-recorded row or creates the early-stop
+      // one) before the screen pops.
+      isDismissible: false,
+      enableDrag: false,
       backgroundColor: FocusPalette.panel,
       builder: (_) => SessionCompleteSheet(state: state!),
     );
@@ -80,10 +86,35 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     }
   }
 
-  void _onNextSession() {
+  /// "Finish & save" after a natural focus + break: records the completed
+  /// session, then returns to Today where the next session is picked.
+  void _onWrapUp() {
     final state = ref.read(focusControllerProvider);
     ref.read(focusControllerProvider.notifier).nextSession();
     _showCompletion(snapshot: state);
+  }
+
+  /// A completed focus is recorded immediately (as partial) so the session is
+  /// never lost if the user leaves or the app dies mid-break. The wrap-up
+  /// sheet later enriches this same row (record is idempotent per session).
+  Future<void> _autoRecord(FocusState s) async {
+    final now = DateTime.now();
+    try {
+      await ref
+          .read(sessionRepositoryProvider)
+          .record(
+            slotId: s.slotId,
+            subjectId: s.subjectId,
+            activityType: ActivityType.study,
+            title: s.title,
+            startedAt: s.startedAt ?? now,
+            endedAt: now,
+            status: SessionStatus.partial,
+            focusMinutes: s.focusDuration.inMinutes,
+          );
+    } catch (_) {
+      // Best-effort: the wrap-up sheet still lets the user save.
+    }
   }
 
   Future<void> _showTiredSheet() async {
@@ -128,6 +159,34 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                   ref.read(focusControllerProvider.notifier).tiredBreak(20);
                 },
                 child: const Text('Take 20 min Break'),
+              ),
+              const SizedBox(height: 8),
+              FilledButton.tonal(
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF2E3A2E),
+                  foregroundColor: FocusPalette.leaf,
+                ),
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  ref
+                      .read(focusControllerProvider.notifier)
+                      .tiredBreak(5, label: 'STRETCH');
+                },
+                child: const Text('Do some stretches (5 min)'),
+              ),
+              const SizedBox(height: 8),
+              FilledButton.tonal(
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF3A3A2E),
+                  foregroundColor: FocusPalette.amber,
+                ),
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  ref
+                      .read(focusControllerProvider.notifier)
+                      .tiredBreak(20, label: 'NAP');
+                },
+                child: const Text('Take a quick nap (20 min)'),
               ),
               const SizedBox(height: 8),
               FilledButton.tonal(
@@ -261,10 +320,13 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(focusControllerProvider);
-    ref.listen<FocusState>(
-      focusControllerProvider,
-      (_, next) => _syncWakelock(next.phase),
-    );
+    ref.listen<FocusState>(focusControllerProvider, (prev, next) {
+      _syncWakelock(next.phase);
+      if (next.phase == FocusPhase.sessionComplete &&
+          prev?.phase != FocusPhase.sessionComplete) {
+        _autoRecord(next);
+      }
+    });
 
     // Session ended early (END / "I'm tired" → End Session).
     if (state.phase == FocusPhase.finished) {
@@ -361,6 +423,16 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
   Future<void> _showWaterDialog() async {
     if (_dialogOpen || _sheetOpen) return;
     _dialogOpen = true;
+    unawaited(
+      ref
+          .read(notificationsServiceProvider)
+          .showImmediately(
+            title: 'Time for water',
+            body:
+                'You are in a focus flow. Sip a glass of water, stay hydrated.',
+          )
+          .catchError((_) {}),
+    );
     try {
       await showDialog<void>(
         context: context,
@@ -666,7 +738,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  paused ? 'PAUSED' : 'REST',
+                  paused ? 'PAUSED' : (state.breakLabel ?? 'REST'),
                   style: const TextStyle(
                     color: FocusPalette.textDim,
                     fontSize: 12,
@@ -697,9 +769,14 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
-            'Rest your eyes. No phone.',
-            style: TextStyle(color: FocusPalette.textDim, fontSize: 13),
+          Text(
+            switch (state.breakLabel) {
+              'STRETCH' => 'Stand up, roll your shoulders. Loosen up.',
+              'NAP' => 'Close your eyes. A short nap resets your focus.',
+              _ => 'Rest your eyes. No phone.',
+            },
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: FocusPalette.textDim, fontSize: 13),
           ),
           const SizedBox(height: 24),
           Row(
@@ -772,7 +849,8 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Time to get back to it.',
+          'Wrap up this session, then pick the next one.',
+          textAlign: TextAlign.center,
           style: TextStyle(color: FocusPalette.textSoft),
         ),
         const SizedBox(height: 28),
@@ -781,8 +859,8 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
             backgroundColor: FocusPalette.leaf,
             foregroundColor: FocusPalette.ink,
           ),
-          onPressed: _onNextSession,
-          child: const Text('START NEXT SESSION'),
+          onPressed: _onWrapUp,
+          child: const Text('FINISH & SAVE'),
         ),
       ],
     );

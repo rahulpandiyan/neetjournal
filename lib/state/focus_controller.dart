@@ -18,6 +18,8 @@ class FocusState {
     this.phase = FocusPhase.idle,
     this.focusDuration = const Duration(minutes: 50),
     this.breakDuration = const Duration(minutes: 10),
+    this.configuredBreakDuration,
+    this.breakLabel,
     this.subjectName = '',
     this.title = '',
     this.target,
@@ -32,6 +34,15 @@ class FocusState {
   final FocusPhase phase;
   final Duration focusDuration;
   final Duration breakDuration;
+
+  /// The user's configured break length for this session. A mid-session
+  /// "I'm tired" break overwrites [breakDuration] for its own countdown, so
+  /// the natural post-session break falls back to this configured value.
+  final Duration? configuredBreakDuration;
+
+  /// Optional label for the current break (e.g. STRETCH, NAP). Falls back to
+  /// REST when null.
+  final String? breakLabel;
   final String subjectName;
   final String title;
   final String? target;
@@ -66,6 +77,7 @@ class FocusState {
     FocusPhase? phase,
     Duration? focusDuration,
     Duration? breakDuration,
+    Duration? configuredBreakDuration,
     String? subjectName,
     String? title,
     String? target,
@@ -75,14 +87,18 @@ class FocusState {
     DateTime? endTime,
     Duration? pausedRemaining,
     Duration? resumeFocusRemaining,
+    String? breakLabel,
     bool clearEndTime = false,
     bool clearPausedRemaining = false,
     bool clearResumeFocusRemaining = false,
+    bool clearBreakLabel = false,
   }) {
     return FocusState(
       phase: phase ?? this.phase,
       focusDuration: focusDuration ?? this.focusDuration,
       breakDuration: breakDuration ?? this.breakDuration,
+      configuredBreakDuration:
+          configuredBreakDuration ?? this.configuredBreakDuration,
       subjectName: subjectName ?? this.subjectName,
       title: title ?? this.title,
       target: target ?? this.target,
@@ -96,6 +112,7 @@ class FocusState {
       resumeFocusRemaining: clearResumeFocusRemaining
           ? null
           : (resumeFocusRemaining ?? this.resumeFocusRemaining),
+      breakLabel: clearBreakLabel ? null : (breakLabel ?? this.breakLabel),
     );
   }
 }
@@ -143,6 +160,7 @@ class FocusController extends Notifier<FocusState> {
           this.state = state.copyWith(
             phase: FocusPhase.focusing,
             endTime: now.add(resume),
+            breakDuration: state.configuredBreakDuration ?? state.breakDuration,
             clearResumeFocusRemaining: true,
           );
         } else {
@@ -168,6 +186,15 @@ class FocusController extends Notifier<FocusState> {
     int? breakMinutes,
   }) {
     final state = this.state;
+    final focus = Duration(
+      minutes: focusMinutes ?? state.focusDuration.inMinutes,
+    );
+    final breakDur = Duration(
+      minutes:
+          breakMinutes ??
+          state.configuredBreakDuration?.inMinutes ??
+          state.breakDuration.inMinutes,
+    );
     this.state = state.copyWith(
       phase: FocusPhase.focusing,
       slotId: slotId,
@@ -175,18 +202,14 @@ class FocusController extends Notifier<FocusState> {
       subjectName: subjectName,
       title: title,
       target: target,
-      focusDuration: Duration(
-        minutes: focusMinutes ?? state.focusDuration.inMinutes,
-      ),
-      breakDuration: Duration(
-        minutes: breakMinutes ?? state.breakDuration.inMinutes,
-      ),
+      focusDuration: focus,
+      breakDuration: breakDur,
+      configuredBreakDuration: breakDur,
       startedAt: DateTime.now(),
-      endTime: DateTime.now().add(
-        Duration(minutes: focusMinutes ?? state.focusDuration.inMinutes),
-      ),
+      endTime: DateTime.now().add(focus),
       clearPausedRemaining: true,
       clearResumeFocusRemaining: true,
+      clearBreakLabel: true,
     );
     _ensureTicker();
   }
@@ -233,11 +256,14 @@ class FocusController extends Notifier<FocusState> {
         s.phase != FocusPhase.breakComplete) {
       return;
     }
+    final breakDur = s.configuredBreakDuration ?? s.breakDuration;
     state = s.copyWith(
       phase: FocusPhase.breaking,
-      endTime: DateTime.now().add(s.breakDuration),
+      breakDuration: breakDur,
+      endTime: DateTime.now().add(breakDur),
       clearPausedRemaining: true,
       clearResumeFocusRemaining: true,
+      clearBreakLabel: true,
     );
     _ensureTicker();
   }
@@ -281,6 +307,7 @@ class FocusController extends Notifier<FocusState> {
       state = s.copyWith(
         phase: FocusPhase.focusing,
         endTime: DateTime.now().add(resume),
+        breakDuration: s.configuredBreakDuration ?? s.breakDuration,
         clearPausedRemaining: true,
         clearResumeFocusRemaining: true,
       );
@@ -295,8 +322,9 @@ class FocusController extends Notifier<FocusState> {
   }
 
   /// "I'm tired" → start a break of [minutes] right away, remembering how much
-  /// focus time was left so the session can resume afterwards.
-  void tiredBreak(int minutes) {
+  /// focus time was left so the session can resume afterwards. [label] shows on
+  /// the break screen (e.g. STRETCH, NAP); defaults to REST when omitted.
+  void tiredBreak(int minutes, {String? label}) {
     final s = state;
     if (s.phase != FocusPhase.focusing && s.phase != FocusPhase.paused) return;
     _stopTicker();
@@ -304,6 +332,7 @@ class FocusController extends Notifier<FocusState> {
       phase: FocusPhase.breaking,
       breakDuration: Duration(minutes: minutes),
       endTime: DateTime.now().add(Duration(minutes: minutes)),
+      breakLabel: label,
       resumeFocusRemaining: s.remaining(),
       clearPausedRemaining: true,
     );

@@ -51,9 +51,17 @@ class _SessionCompleteSheetState extends ConsumerState<SessionCompleteSheet> {
     final s = widget.state;
     final now = DateTime.now();
     final started = s.startedAt;
-    final focusMinutes = started == null
-        ? s.focusDuration.inMinutes
-        : (now.difference(started).inMinutes).clamp(0, 24 * 60).toInt();
+    // A naturally completed session focused the full duration (and the sheet
+    // opens after the break, so wall-clock would overcount). Only an early
+    // exit uses elapsed time, best-effort.
+    final int focusMinutes;
+    if (started == null || !_earlyExit) {
+      focusMinutes = s.focusDuration.inMinutes;
+    } else {
+      focusMinutes = (now.difference(started).inMinutes)
+          .clamp(0, 24 * 60)
+          .toInt();
+    }
     final questions = int.tryParse(_questions.text.trim()) ?? 0;
 
     await ref

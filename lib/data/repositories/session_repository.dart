@@ -21,7 +21,38 @@ class SessionRepository {
     String? pendingNote,
     int questionsSolved = 0,
     int focusMinutes = 0,
-  }) {
+  }) async {
+    // Idempotent by (slotId, startedAt): the wrap-up sheet after a focus
+    // session updates the same row the focus auto-recorded instead of
+    // inserting a duplicate (which would double-count progress).
+    final existing =
+        await (_db.select(_db.studySessions)..where((t) {
+              final slotMatch = slotId != null
+                  ? t.slotId.equals(slotId)
+                  : const Constant(true);
+              return slotMatch & t.startedAt.equals(startedAt);
+            }))
+            .getSingleOrNull();
+
+    if (existing != null) {
+      await (_db.update(
+        _db.studySessions,
+      )..where((t) => t.id.equals(existing.id))).write(
+        StudySessionsCompanion(
+          activityType: Value(activityType),
+          title: Value(title),
+          subjectId: Value(subjectId),
+          endedAt: Value(endedAt),
+          status: Value(status),
+          learned: Value(learned),
+          pendingNote: Value(pendingNote),
+          questionsSolved: Value(questionsSolved),
+          focusMinutes: Value(focusMinutes),
+        ),
+      );
+      return existing.id;
+    }
+
     return _db
         .into(_db.studySessions)
         .insert(
