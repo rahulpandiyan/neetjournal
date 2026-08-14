@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "951622306229",
+    "project_id": "studyn-5bff0",
+    "storage_bucket": "studyn-5bff0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:951622306229:android:c97f8dfb0acad8b0f971fc",
+        "android_client_info": {
+          "package_name": "com.neerjournal.studyn"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5VgCxw7UknAsHHfK5JOMT0ntRmC3jc0U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -124,6 +124,16 @@ class SettingsRepository {
   Future<void> setPreset(String preset) =>
       _db.setSetting('focusPreset', preset);
 
+  /// Watches a single settings value by key (null when unset).
+  Stream<String?> watchSetting(String key) {
+    return (_db.select(_db.appSettings)..where((t) => t.key.equals(key)))
+        .watchSingleOrNull()
+        .map((row) => row?.value);
+  }
+
+  Future<void> setSetting(String key, String value) =>
+      _db.setSetting(key, value);
+
   /// "Bad day mode" is scoped to a single day so it auto-expires on the next
   /// day's first write/tick.
   String badDayKey(DateTime day) => 'badDayMode:${dateToStr(day)}';

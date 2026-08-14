@@ -1,11 +1,14 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'screens/home_shell.dart';
+import '../../state/auth_providers.dart';
+import '../ui/auth/login_screen.dart';
+import '../ui/auth/signup_screen.dart';
+import '../ui/onboarding/oath_screen.dart';
 
-/// Simple branded splash: shows the app logo briefly, then fades into the
-/// app shell.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -14,30 +17,39 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  Timer? _timer;
-
   @override
   void initState() {
     super.initState();
-    _timer = Timer(const Duration(milliseconds: 1600), _goHome);
+    _navigate();
   }
 
-  void _goHome() {
-    if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (_, animation, secondaryAnimation) => const HomeShell(),
-        transitionsBuilder: (_, animation, secondaryAnimation, child) =>
-            FadeTransition(opacity: animation, child: child),
-        transitionDuration: const Duration(milliseconds: 350),
-      ),
-    );
-  }
+  Future<void> _navigate() async {
+    // Wait for Firebase to initialize (if configured).
+    final container = ProviderScope.containerOf(context, listen: false);
+    final firebase = container.read(firebaseAppProvider);
+    if (firebase == null) {
+      // Firebase not configured: show placeholder auth gate.
+      if (!mounted) return;
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+      return;
+    }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+    // Listen for auth changes; once resolved, decide next.
+    final asyncValue = container.read(authStateProvider);
+    asyncValue.whenData((user) {
+      if (!mounted) return;
+      if (user == null) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const OathScreen()),
+        );
+      }
+    });
   }
 
   @override
