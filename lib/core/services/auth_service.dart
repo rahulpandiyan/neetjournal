@@ -113,7 +113,7 @@ class AuthService {
       if (e.code == 'aborted-by-user') rethrow;
       rethrow;
     } catch (_) {
-      throw const FirebaseAuthException(
+      throw FirebaseAuthException(
         code: 'aborted-by-user',
         message: 'Google sign-in was cancelled.',
       );

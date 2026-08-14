@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import '../../state/auth_providers.dart';
 import '../../state/providers.dart';
 import '../screens/home_shell.dart';
 import '../widgets/widgets.dart';
