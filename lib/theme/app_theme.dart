@@ -235,7 +235,6 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         elevation: 8,
-        shadowColor: const Color(0xFF2E7D32).withValues(alpha: 0.3),
         contentTextStyle: const TextStyle(
           fontFamily: 'DMSans',
           fontSize: 14,
