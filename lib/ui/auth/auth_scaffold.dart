@@ -1,6 +1,5 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 /// Shared chrome for the login / signup screens: brand header on a soft
 /// gradient, then the form content in a scrollable column.
@@ -99,7 +98,7 @@ class AuthScaffold extends StatelessWidget {
   }
 }
 
-/// The Google "G" icon from the drawable resource.
+/// The Google "G" icon from the SVG drawable.
 class GoogleG extends StatelessWidget {
   const GoogleG({super.key, this.size = 22});
 
@@ -107,12 +106,11 @@ class GoogleG extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      'assets/images/google_logo.png',
+    return SvgPicture.asset(
+      'assets/svg/google_logo.svg',
       width: size,
       height: size,
       color: const Color(0xFF4285F4),
-      colorBlendMode: BlendMode.srcIn,
     );
   }
 }
