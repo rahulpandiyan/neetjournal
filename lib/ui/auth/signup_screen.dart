@@ -58,10 +58,18 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       title: 'Create Account',
       subtitle: 'Sign up with Google to get started.',
       children: [
-        GoogleSignInButton(
+        FilledButton.icon(
           onPressed: _loading ? null : _google,
-          label: 'Sign up with Google',
-          loading: _loading,
+          icon: const GoogleG(size: 22),
+          label: const Text('Sign up with Google'),
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(54),
+            textStyle: const TextStyle(
+              fontFamily: 'DMSans',
+              fontSize: 15.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ),
         const SizedBox(height: 24),
         Row(

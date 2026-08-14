@@ -26,72 +26,70 @@ class AuthScaffold extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              scheme.primaryContainer.withValues(alpha: 0.25),
+              scheme.primaryContainer.withValues(alpha: 0.35),
               theme.scaffoldBackgroundColor,
               theme.scaffoldBackgroundColor,
             ],
-            stops: const [0, 0.35, 1],
+            stops: const [0, 0.42, 1],
           ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Spacer(flex: 1),
-                // Logo
-                Center(
-                  child: Container(
-                    width: 96,
-                    height: 96,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: scheme.surface,
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        BoxShadow(
-                          color: scheme.shadow.withValues(alpha: 0.08),
-                          blurRadius: 20,
-                          offset: const Offset(0, 6),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(28, 32, 28, 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 84,
+                        height: 84,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: theme.scaffoldBackgroundColor,
+                          borderRadius: BorderRadius.circular(26),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.10),
+                              blurRadius: 24,
+                              offset: const Offset(0, 12),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: Image.asset(
-                        'assets/images/app_logo.png',
-                        fit: BoxFit.cover,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(18),
+                          child: Image.asset(
+                            'assets/images/app_logo.png',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 24),
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.7,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      subtitle,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    ...children,
+                  ],
                 ),
-                const SizedBox(height: 28),
-                // Title
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.7,
-                    color: scheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                // Subtitle
-                Text(
-                  subtitle,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 40),
-                // Button
-                ...children,
-                const Spacer(flex: 2),
-              ],
+              ),
             ),
           ),
         ),
@@ -100,7 +98,7 @@ class AuthScaffold extends StatelessWidget {
   }
 }
 
-/// The Google "G" icon with original Google colors.
+/// The Google "G" icon from the SVG drawable.
 class GoogleG extends StatelessWidget {
   const GoogleG({super.key, this.size = 22});
 
@@ -112,12 +110,13 @@ class GoogleG extends StatelessWidget {
       'assets/svg/google_logo.svg',
       width: size,
       height: size,
+      color: const Color(0xFF4285F4),
     );
   }
 }
 
-/// Modern Google sign-in button matching app's design language.
-/// Clean, minimal with soft shadows and rounded corners.
+/// Modern bento-style Google sign-in button with skeletonism design.
+/// Clean card, soft shadows, and sleek typography.
 class GoogleSignInButton extends StatelessWidget {
   const GoogleSignInButton({
     super.key,
@@ -136,21 +135,33 @@ class GoogleSignInButton extends StatelessWidget {
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
-    // Match app's primary green
-    final primaryColor = isDark ? const Color(0xFF83CE86) : const Color(0xFF2E7D32);
-
     return GestureDetector(
       onTap: loading ? null : onPressed,
       child: Container(
-        height: 54,
+        height: 56,
         decoration: BoxDecoration(
-          color: primaryColor,
-          borderRadius: BorderRadius.circular(18),
+          color: isDark
+              ? const Color(0xFF2A2D27)
+              : const Color(0xFFFDFDFD),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark
+                ? const Color(0xFF3D4237).withValues(alpha: 0.8)
+                : const Color(0xFFE8EBE6),
+            width: 1,
+          ),
           boxShadow: [
+            // Soft inner highlight
             BoxShadow(
-              color: primaryColor.withValues(alpha: 0.25),
+              color: Colors.white.withValues(alpha: isDark ? 0.02 : 0.9),
+              offset: const Offset(-2, -2),
+              blurRadius: 8,
+            ),
+            // Soft outer shadow
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+              offset: const Offset(2, 4),
               blurRadius: 16,
-              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -159,11 +170,11 @@ class GoogleSignInButton extends StatelessWidget {
           children: [
             if (loading)
               const SizedBox(
-                width: 22,
-                height: 22,
+                width: 20,
+                height: 20,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: Colors.white,
+                  strokeWidth: 2,
+                  color: Color(0xFF4285F4),
                 ),
               )
             else
@@ -173,9 +184,9 @@ class GoogleSignInButton extends StatelessWidget {
               label,
               style: theme.textTheme.labelLarge?.copyWith(
                 fontFamily: 'DMSans',
-                fontSize: 15.5,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : const Color(0xFF1F2937),
                 letterSpacing: 0.1,
               ),
             ),
