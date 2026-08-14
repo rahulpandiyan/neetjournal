@@ -58,18 +58,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       title: 'Welcome',
       subtitle: 'Sign in with Google to keep your study data on every device.',
       children: [
-        FilledButton.icon(
+        GoogleSignInButton(
           onPressed: _loading ? null : _google,
-          icon: const GoogleG(size: 22),
-          label: const Text('Sign in with Google'),
-          style: FilledButton.styleFrom(
-            minimumSize: const Size.fromHeight(54),
-            textStyle: const TextStyle(
-              fontFamily: 'DMSans',
-              fontSize: 15.5,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          label: 'Sign in with Google',
+          loading: _loading,
         ),
         const SizedBox(height: 24),
         Center(
