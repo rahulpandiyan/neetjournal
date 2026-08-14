@@ -102,21 +102,22 @@ class AuthService {
 
     // Desktop (Windows/Linux) needs an interactive sign-in that opens the
     // browser; the `google_sign_in_*` desktop federations do this for us.
-    final account = await google.authenticate();
-    if (account == null) {
-      // User cancelled or aborted
-      return _auth.currentUser != null
-          ? UserCredential(user: _auth.currentUser, additionalUserInfo: null)
-          : throw FirebaseAuthException(
-              code: 'aborted-by-user',
-              message: 'Google sign-in was cancelled.',
-            );
+    try {
+      final account = await google.authenticate();
+      final authentication = account.authentication;
+      final credential = GoogleAuthProvider.credential(
+        idToken: authentication.idToken,
+      );
+      return _auth.signInWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'aborted-by-user') rethrow;
+      rethrow;
+    } catch (_) {
+      throw const FirebaseAuthException(
+        code: 'aborted-by-user',
+        message: 'Google sign-in was cancelled.',
+      );
     }
-    final authentication = account.authentication;
-    final credential = GoogleAuthProvider.credential(
-      idToken: authentication.idToken,
-    );
-    return _auth.signInWithCredential(credential);
   }
 
   Future<void> signOut() async {
