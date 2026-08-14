@@ -40,7 +40,7 @@ class AuthScaffold extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Spacer(flex: 2),
+                const SizedBox(height: 40),
                 // Logo
                 Center(
                   child: Container(
@@ -93,7 +93,17 @@ class AuthScaffold extends StatelessWidget {
                 ...children,
                 const SizedBox(height: 24),
                 // Footer text
-                const Spacer(),
+                Center(
+                  child: Text(
+                    'By signing in, you agree to sync your data securely across devices.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 40),
               ],
             ),
           ),
