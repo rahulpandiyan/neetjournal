@@ -26,35 +26,34 @@ class AuthScaffold extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              scheme.primaryContainer.withValues(alpha: 0.35),
+              scheme.primaryContainer.withValues(alpha: 0.25),
               theme.scaffoldBackgroundColor,
               theme.scaffoldBackgroundColor,
             ],
-            stops: const [0, 0.42, 1],
+            stops: const [0, 0.35, 1],
           ),
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 40),
+                const Spacer(flex: 1),
                 // Logo
                 Center(
                   child: Container(
-                    width: 100,
-                    height: 100,
+                    width: 96,
+                    height: 96,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: scheme.surface,
                       borderRadius: BorderRadius.circular(28),
                       boxShadow: [
                         BoxShadow(
-                          color: scheme.shadow.withValues(alpha: 0.12),
-                          blurRadius: 24,
-                          offset: const Offset(0, 8),
+                          color: scheme.shadow.withValues(alpha: 0.08),
+                          blurRadius: 20,
+                          offset: const Offset(0, 6),
                         ),
                       ],
                     ),
@@ -88,10 +87,10 @@ class AuthScaffold extends StatelessWidget {
                     height: 1.5,
                   ),
                 ),
-                const SizedBox(height: 36),
+                const SizedBox(height: 40),
                 // Button
                 ...children,
-                const SizedBox(height: 40),
+                const Spacer(flex: 2),
               ],
             ),
           ),
@@ -117,8 +116,8 @@ class GoogleG extends StatelessWidget {
   }
 }
 
-/// Modern claymorphism Google sign-in button with soft 3D effect.
-/// Features inner shadows, rounded corners, and a "squishy" clay-like appearance.
+/// Modern Google sign-in button matching app's design language.
+/// Clean, minimal with soft shadows and rounded corners.
 class GoogleSignInButton extends StatelessWidget {
   const GoogleSignInButton({
     super.key,
@@ -137,48 +136,21 @@ class GoogleSignInButton extends StatelessWidget {
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
-    // Claymorphism green colors
+    // Match app's primary green
     final primaryColor = isDark ? const Color(0xFF83CE86) : const Color(0xFF2E7D32);
-    final primaryLight = isDark ? const Color(0xFF205E25) : const Color(0xFFA5D6A7);
-    final primaryDark = isDark ? const Color(0xFF1a4a1e) : const Color(0xFF1a5c1e);
 
     return GestureDetector(
       onTap: loading ? null : onPressed,
       child: Container(
-        height: 62,
+        height: 54,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              primaryLight,
-              primaryColor,
-              primaryDark,
-            ],
-            stops: const [0, 0.6, 1],
-          ),
-          borderRadius: BorderRadius.circular(30), // Very rounded for clay look
+          color: primaryColor,
+          borderRadius: BorderRadius.circular(18),
           boxShadow: [
-            // Soft outer shadow (clay floating effect)
             BoxShadow(
               color: primaryColor.withValues(alpha: 0.25),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
-              spreadRadius: -4,
-            ),
-            // Inner highlight (top-left)
-            BoxShadow(
-              color: Colors.white.withValues(alpha: 0.35),
-              blurRadius: 12,
-              offset: const Offset(-6, -6),
-              spreadRadius: 2,
-            ),
-            // Inner shadow (bottom-right)
-            BoxShadow(
-              color: primaryDark.withValues(alpha: 0.25),
-              blurRadius: 12,
-              offset: const Offset(6, 6),
-              spreadRadius: -2,
+              blurRadius: 16,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -186,7 +158,7 @@ class GoogleSignInButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (loading)
-              SizedBox(
+              const SizedBox(
                 width: 22,
                 height: 22,
                 child: CircularProgressIndicator(
@@ -195,23 +167,16 @@ class GoogleSignInButton extends StatelessWidget {
                 ),
               )
             else
-              const GoogleG(size: 24),
-            const SizedBox(width: 14),
+              const GoogleG(size: 22),
+            const SizedBox(width: 12),
             Text(
               label,
               style: theme.textTheme.labelLarge?.copyWith(
                 fontFamily: 'DMSans',
-                fontSize: 16,
+                fontSize: 15.5,
                 fontWeight: FontWeight.w700,
                 color: Colors.white,
-                letterSpacing: 0.3,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    offset: const Offset(0, 1),
-                    blurRadius: 2,
-                  ),
-                ],
+                letterSpacing: 0.1,
               ),
             ),
           ],

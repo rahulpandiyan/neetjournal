@@ -53,7 +53,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return AuthScaffold(
       title: 'Welcome',
       subtitle: 'Sign in with Google to keep your study data on every device.',
@@ -62,17 +61,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           onPressed: _loading ? null : _google,
           label: 'Sign in with Google',
           loading: _loading,
-        ),
-        const SizedBox(height: 24),
-        Center(
-          child: Text(
-            'By signing in, you agree to sync your data securely across devices.',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
         ),
       ],
     );
