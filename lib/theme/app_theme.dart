@@ -232,13 +232,16 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: const Color(0xFF2E7D32),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        insetPadding: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        elevation: 8,
+        shadowColor: const Color(0xFF2E7D32).withValues(alpha: 0.3),
         contentTextStyle: const TextStyle(
           fontFamily: 'DMSans',
           fontSize: 14,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
           color: Colors.white,
+          letterSpacing: 0.2,
         ),
       ),
       appBarTheme: AppBarThemeData(
