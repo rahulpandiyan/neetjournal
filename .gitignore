@@ -32,6 +32,8 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+/dist/
+/build/linux-deb/
 
 # Symbolication related
 app.*.symbols

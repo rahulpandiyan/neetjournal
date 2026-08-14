@@ -4,8 +4,29 @@
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
 #endif
+#include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include "flutter/generated_plugin_registrant.h"
+
+// Sets the window icon to the bundled app logo. The icon ships inside the
+// Flutter assets (data/flutter_assets/...), so we resolve it relative to the
+// running executable, which works for both the build bundle and a system
+// install under /usr/lib.
+static void my_application_set_window_icon(GtkWindow* window) {
+  g_autofree gchar* executable = g_file_read_link("/proc/self/exe", nullptr);
+  if (executable == nullptr) {
+    return;
+  }
+  g_autofree gchar* executable_dir = g_path_get_dirname(executable);
+  g_autofree gchar* icon_path = g_build_filename(
+      executable_dir, "data", "flutter_assets", "assets", "images",
+      "app_logo.png", nullptr);
+  g_autoptr(GError) error = nullptr;
+  g_autoptr(GdkPixbuf) pixbuf = gdk_pixbuf_new_from_file(icon_path, &error);
+  if (pixbuf != nullptr) {
+    gtk_window_set_icon(window, pixbuf);
+  }
+}
 
 struct _MyApplication {
   GtkApplication parent_instance;
@@ -53,6 +74,7 @@ static void my_application_activate(GApplication* application) {
   }
 
   gtk_window_set_default_size(window, 1280, 720);
+  my_application_set_window_icon(window);
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(
