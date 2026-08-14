@@ -91,18 +91,6 @@ class AuthScaffold extends StatelessWidget {
                 const SizedBox(height: 36),
                 // Button
                 ...children,
-                const SizedBox(height: 24),
-                // Footer text
-                Center(
-                  child: Text(
-                    'By signing in, you agree to sync your data securely across devices.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
                 const SizedBox(height: 40),
               ],
             ),
@@ -129,8 +117,8 @@ class GoogleG extends StatelessWidget {
   }
 }
 
-/// Modern frosted green Google sign-in button with sleek design.
-/// Uses project's primary green (#2E7D32) with subtle shadows.
+/// Modern claymorphism Google sign-in button with soft 3D effect.
+/// Features inner shadows, rounded corners, and a "squishy" clay-like appearance.
 class GoogleSignInButton extends StatelessWidget {
   const GoogleSignInButton({
     super.key,
@@ -149,36 +137,48 @@ class GoogleSignInButton extends StatelessWidget {
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
-    // Frosted green colors
+    // Claymorphism green colors
     final primaryColor = isDark ? const Color(0xFF83CE86) : const Color(0xFF2E7D32);
     final primaryLight = isDark ? const Color(0xFF205E25) : const Color(0xFFA5D6A7);
+    final primaryDark = isDark ? const Color(0xFF1a4a1e) : const Color(0xFF1a5c1e);
 
     return GestureDetector(
       onTap: loading ? null : onPressed,
       child: Container(
-        height: 58,
+        height: 62,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              primaryColor,
               primaryLight,
+              primaryColor,
+              primaryDark,
             ],
+            stops: const [0, 0.6, 1],
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(30), // Very rounded for clay look
           boxShadow: [
-            // Primary shadow
+            // Soft outer shadow (clay floating effect)
             BoxShadow(
-              color: primaryColor.withValues(alpha: 0.3),
-              offset: const Offset(0, 4),
-              blurRadius: 16,
+              color: primaryColor.withValues(alpha: 0.25),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+              spreadRadius: -4,
             ),
-            // Subtle inner highlight
+            // Inner highlight (top-left)
             BoxShadow(
-              color: Colors.white.withValues(alpha: 0.15),
-              offset: const Offset(-2, -2),
-              blurRadius: 8,
+              color: Colors.white.withValues(alpha: 0.35),
+              blurRadius: 12,
+              offset: const Offset(-6, -6),
+              spreadRadius: 2,
+            ),
+            // Inner shadow (bottom-right)
+            BoxShadow(
+              color: primaryDark.withValues(alpha: 0.25),
+              blurRadius: 12,
+              offset: const Offset(6, 6),
+              spreadRadius: -2,
             ),
           ],
         ),
@@ -187,24 +187,31 @@ class GoogleSignInButton extends StatelessWidget {
           children: [
             if (loading)
               SizedBox(
-                width: 20,
-                height: 20,
+                width: 22,
+                height: 22,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
+                  strokeWidth: 2.5,
                   color: Colors.white,
                 ),
               )
             else
-              const GoogleG(size: 22),
-            const SizedBox(width: 12),
+              const GoogleG(size: 24),
+            const SizedBox(width: 14),
             Text(
               label,
               style: theme.textTheme.labelLarge?.copyWith(
                 fontFamily: 'DMSans',
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
                 color: Colors.white,
-                letterSpacing: 0.2,
+                letterSpacing: 0.3,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    offset: const Offset(0, 1),
+                    blurRadius: 2,
+                  ),
+                ],
               ),
             ),
           ],
