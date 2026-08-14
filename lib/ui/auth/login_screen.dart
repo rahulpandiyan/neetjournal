@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/auth_providers.dart';
 import 'auth_scaffold.dart';
-import 'signup_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -15,7 +14,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _phone = TextEditingController();
+  final _phone = TextEditingController(text: '+91');
   final _otp = TextEditingController();
 
   bool _loading = false;
@@ -29,15 +28,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  String _getFullPhone() {
+    var value = _phone.text.trim();
+    // Ensure it starts with +91
+    if (!value.startsWith('+91')) {
+      value = '+91' + value.replaceAll(RegExp(r'\D'), '');
+    }
+    return value;
+  }
+
   Future<void> _sendOTP() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
       await ref.read(authServiceProvider).sendPhoneOTP(
-            phoneNumber: _phone.text.trim(),
+            phoneNumber: _getFullPhone(),
             autoVerify: (credential) async {
               setState(() => _autoVerified = true);
-              await _handleSignedIn();
+              await ref.read(authServiceProvider).signInWithCredential(credential);
             },
           );
       if (mounted) setState(() => _otpSent = true);
@@ -58,7 +66,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _loading = true);
     try {
       await ref.read(authServiceProvider).verifyPhoneOTP(_otp.text.trim());
-      await _handleSignedIn();
     } on FirebaseAuthException catch (e) {
       _showError(_extractFirebaseMessage(e));
     } catch (e) {
@@ -72,7 +79,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _loading = true);
     try {
       await ref.read(authServiceProvider).signInWithGoogle();
-      await _handleSignedIn();
     } on FirebaseAuthException catch (e) {
       if (e.code != 'aborted-by-user') {
         _showError(e.message ?? 'Google sign-in failed.');
@@ -87,14 +93,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  Future<void> _handleSignedIn() async {
-    // Sign-in successful — navigate is handled by the auth state listener.
-  }
-
   String _extractFirebaseMessage(FirebaseAuthException e) {
     switch (e.code) {
       case 'invalid-phone-number':
-        return 'Please enter a valid phone number with country code (e.g. +919876543210)';
+        return 'Please enter a valid phone number (e.g. 9876543210)';
       case 'user-disabled':
         return 'This account has been disabled.';
       case 'too-many-requests':
@@ -117,32 +119,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return AuthScaffold(
-      title: 'Sign in',
-      subtitle: 'Enter your mobile number to continue.',
+      title: 'Welcome',
+      subtitle: 'Sign in with your mobile number.',
       children: [
         Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Phone number input.
+              // Phone number input with +91 prefix.
               TextFormField(
                 controller: _phone,
                 keyboardType: TextInputType.phone,
                 autocorrect: false,
                 textInputAction: _otpSent ? TextInputAction.done : TextInputAction.next,
                 onFieldSubmitted: _otpSent ? (_) => _verifyOTP() : null,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Mobile Number',
-                  hintText: '+91 98765 43210',
-                  prefixIcon: Icon(Icons.phone_outlined),
+                  hintText: '98765 43210',
+                  prefixIcon: const Icon(Icons.phone_outlined),
+                  prefixText: '+91 ',
                 ),
                 validator: (v) {
                   final value = v?.trim() ?? '';
                   if (value.isEmpty) return 'Enter your phone number';
-                  // Basic check: must start with + and have 10-15 digits
-                  if (!value.startsWith('+') || value.length < 10) {
-                    return 'Enter a valid phone number with country code';
+                  // Remove +91 prefix and check remaining digits
+                  final digits = value.replaceFirst('+91', '').replaceAll(RegExp(r'\D'), '');
+                  if (digits.length != 10) {
+                    return 'Enter a valid 10-digit number';
                   }
                   return null;
                 },
@@ -153,7 +157,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               if (_otpSent) ...[
                 TextFormField(
                   controller: _otp,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(signed: false),
                   autocorrect: false,
                   maxLength: 6,
                   textInputAction: TextInputAction.done,
@@ -189,12 +193,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const Center(
                   child: Text(
                     'Auto-verified ✓',
-                    style: TextStyle(color: Colors.green),
+                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               Row(
                 children: [
                   const Expanded(child: Divider()),
@@ -218,20 +222,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size.fromHeight(52),
                   backgroundColor: theme.colorScheme.surface,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-              Center(
-                child: TextButton(
-                  onPressed: _loading
-                      ? null
-                      : () => Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (_) => const SignupScreen(),
-                            ),
-                          ),
-                  child: const Text('Use email instead'),
                 ),
               ),
             ],

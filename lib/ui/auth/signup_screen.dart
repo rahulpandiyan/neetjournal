@@ -15,39 +15,94 @@ class SignupScreen extends ConsumerStatefulWidget {
 
 class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _name = TextEditingController();
-  final _email = TextEditingController();
-  final _password = TextEditingController();
+  final _phone = TextEditingController(text: '+91');
+  final _otp = TextEditingController();
+
   bool _loading = false;
+  bool _otpSent = false;
+  bool _autoVerified = false;
 
   @override
   void dispose() {
-    _name.dispose();
-    _email.dispose();
-    _password.dispose();
+    _phone.dispose();
+    _otp.dispose();
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  String _getFullPhone() {
+    var value = _phone.text.trim();
+    if (!value.startsWith('+91')) {
+      value = '+91' + value.replaceAll(RegExp(r'\D'), '');
+    }
+    return value;
+  }
+
+  Future<void> _sendOTP() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      final user = await ref.read(authServiceProvider).signUpWithEmail(
-            _email.text.trim(),
-            _password.text,
+      await ref.read(authServiceProvider).sendPhoneOTP(
+            phoneNumber: _getFullPhone(),
+            autoVerify: (credential) async {
+              setState(() => _autoVerified = true);
+              await ref.read(authServiceProvider).signInWithCredential(credential);
+            },
           );
-      if (_name.text.trim().isNotEmpty) {
-        await user.user?.updateDisplayName(_name.text.trim());
-      }
-      // Sign-up successful — navigation handled by auth state listener.
+      if (mounted) setState(() => _otpSent = true);
     } on FirebaseAuthException catch (e) {
-      _showError(e.code == 'email-already-in-use'
-          ? 'That email is already registered. Try signing in.'
-          : e.message ?? 'Sign up failed.');
-    } catch (_) {
-      _showError('Sign up failed. Check your connection and try again.');
+      _showError(_extractFirebaseMessage(e));
+    } catch (e) {
+      _showError('Failed to send OTP. Please check your phone number.');
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _verifyOTP() async {
+    if (_otp.text.trim().isEmpty) {
+      _showError('Enter the OTP sent to your phone');
+      return;
+    }
+    setState(() => _loading = true);
+    try {
+      await ref.read(authServiceProvider).verifyPhoneOTP(_otp.text.trim());
+    } on FirebaseAuthException catch (e) {
+      _showError(_extractFirebaseMessage(e));
+    } catch (e) {
+      _showError('Verification failed. Please try again.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _google() async {
+    setState(() => _loading = true);
+    try {
+      await ref.read(authServiceProvider).signInWithGoogle();
+    } on FirebaseAuthException catch (e) {
+      if (e.code != 'aborted-by-user') {
+        _showError(e.message ?? 'Google sign-in failed.');
+      }
+    } catch (_) {
+      _showError(
+        'Google sign-in failed. On desktop it needs an OAuth client in the '
+        'Firebase console.',
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  String _extractFirebaseMessage(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'invalid-phone-number':
+        return 'Please enter a valid phone number (e.g. 9876543210)';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+      case 'network-request-failed':
+        return 'Network error. Please check your connection.';
+      default:
+        return e.message ?? 'Sign up failed.';
     }
   }
 
@@ -63,7 +118,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     final theme = Theme.of(context);
     return AuthScaffold(
       title: 'Create account',
-      subtitle: 'Sign up with email to keep your data safe.',
+      subtitle: 'Sign up with your mobile number.',
       children: [
         Form(
           key: _formKey,
@@ -71,78 +126,104 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TextFormField(
-                controller: _name,
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Name (optional)',
-                  prefixIcon: Icon(Icons.person_outline_rounded),
-                ),
-              ),
-              const SizedBox(height: 14),
-              TextFormField(
-                controller: _email,
-                keyboardType: TextInputType.emailAddress,
+                controller: _phone,
+                keyboardType: TextInputType.phone,
                 autocorrect: false,
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: Icon(Icons.mail_outline_rounded),
+                textInputAction: _otpSent ? TextInputAction.done : TextInputAction.next,
+                onFieldSubmitted: _otpSent ? (_) => _verifyOTP() : null,
+                decoration: InputDecoration(
+                  labelText: 'Mobile Number',
+                  hintText: '98765 43210',
+                  prefixIcon: const Icon(Icons.phone_outlined),
+                  prefixText: '+91 ',
                 ),
                 validator: (v) {
                   final value = v?.trim() ?? '';
-                  if (value.isEmpty) return 'Enter your email';
-                  if (!value.contains('@')) return 'Enter a valid email';
+                  if (value.isEmpty) return 'Enter your phone number';
+                  final digits = value.replaceFirst('+91', '').replaceAll(RegExp(r'\D'), '');
+                  if (digits.length != 10) {
+                    return 'Enter a valid 10-digit number';
+                  }
                   return null;
                 },
               ),
               const SizedBox(height: 14),
-              TextFormField(
-                controller: _password,
-                obscureText: true,
-                textInputAction: TextInputAction.done,
-                onFieldSubmitted: (_) => _submit(),
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  prefixIcon: Icon(Icons.lock_outline_rounded),
+              if (_otpSent) ...[
+                TextFormField(
+                  controller: _otp,
+                  keyboardType: const TextInputType.numberWithOptions(signed: false),
+                  autocorrect: false,
+                  maxLength: 6,
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _verifyOTP(),
+                  decoration: const InputDecoration(
+                    labelText: 'Enter OTP',
+                    hintText: '6-digit code',
+                    prefixIcon: Icon(Icons.vpn_key_outlined),
+                    counterText: '',
+                  ),
                 ),
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'Choose a password';
-                  if (v.length < 6) return 'At least 6 characters';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
+              ],
               FilledButton(
-                onPressed: _loading ? null : _submit,
+                onPressed: _loading
+                    ? null
+                    : _otpSent
+                        ? _verifyOTP
+                        : _sendOTP,
                 child: _loading
                     ? const SizedBox(
                         width: 22,
                         height: 22,
                         child: CircularProgressIndicator(strokeWidth: 2.5),
                       )
-                    : const Text('Create account'),
+                    : Text(_otpSent ? 'Verify OTP' : 'Send OTP'),
               ),
+              if (_autoVerified) ...[
+                const SizedBox(height: 12),
+                const Center(
+                  child: Text(
+                    'Auto-verified ✓',
+                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    'Already have an account?',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                  const Expanded(child: Divider()),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: Text(
+                      'or',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
-                  TextButton(
-                    onPressed: _loading
-                        ? null
-                        : () => Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                builder: (_) => const LoginScreen(),
-                              ),
-                            ),
-                    child: const Text('Sign in'),
-                  ),
+                  const Expanded(child: Divider()),
                 ],
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: _loading ? null : _google,
+                icon: const GoogleG(size: 20),
+                label: const Text('Continue with Google'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(52),
+                  backgroundColor: theme.colorScheme.surface,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Center(
+                child: TextButton(
+                  onPressed: _loading
+                      ? null
+                      : () => Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          ),
+                  child: const Text('Already have an account? Sign in'),
+                ),
               ),
             ],
           ),

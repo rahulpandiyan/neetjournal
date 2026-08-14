@@ -57,6 +57,10 @@ class AuthService {
     return _auth.signInWithCredential(credential);
   }
 
+  Future<UserCredential> signInWithCredential(AuthCredential credential) {
+    return _auth.signInWithCredential(credential);
+  }
+
   Future<UserCredential> signUpWithEmail(String email, String password) {
     return _auth.createUserWithEmailAndPassword(
       email: email,
