@@ -14,7 +14,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _phone = TextEditingController(text: '+91');
+  final _phone = TextEditingController();
   final _otp = TextEditingController();
 
   bool _loading = false;
@@ -30,11 +30,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   String _getFullPhone() {
     var value = _phone.text.trim();
+    // Remove any +91 prefix if user typed it
+    value = value.replaceAll(RegExp(r'^\+91'), '');
     // Ensure it starts with +91
-    if (!value.startsWith('+91')) {
-      value = '+91' + value.replaceAll(RegExp(r'\D'), '');
-    }
-    return value;
+    return '+91' + value.replaceAll(RegExp(r'\D'), '');
   }
 
   Future<void> _sendOTP() async {

@@ -19,23 +19,52 @@ class AuthService {
     required String phoneNumber,
     void Function(PhoneAuthCredential)? autoVerify,
   }) async {
-    await _auth.verifyPhoneNumber(
-      phoneNumber: phoneNumber,
-      verificationCompleted: (PhoneAuthCredential credential) {
-        // Auto-verified on Android/iOS — sign in immediately.
-        autoVerify?.call(credential);
-      },
-      verificationFailed: (FirebaseAuthException e) {
-        throw e;
-      },
-      codeSent: (String verificationId, int? resendToken) {
-        // Update the verification ID so the UI can use it.
-        _currentVerificationId = verificationId;
-      },
-      codeAutoRetrievalTimeout: (String verificationId) {
-        _currentVerificationId = verificationId;
-      },
-    );
+    try {
+      await _auth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) {
+          autoVerify?.call(credential);
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          throw e;
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          _currentVerificationId = verificationId;
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          _currentVerificationId = verificationId;
+        },
+      );
+    } on FirebaseAuthException catch (e) {
+      // Provide better error messages
+      String message = e.message ?? 'Sign in failed.';
+      switch (e.code) {
+        case 'invalid-phone-number':
+          message = 'Invalid phone number. Make sure it includes country code (e.g. +919876543210)';
+          break;
+        case 'missing-android-package-name':
+          message = 'Missing Android package name. Check google-services.json configuration.';
+          break;
+        case 'missing-signature':
+          message = 'Missing app signature. Add your SHA-1 key to Firebase Console.';
+          break;
+        case 'invalid-project':
+          message = 'Invalid Firebase project. Check your project configuration.';
+          break;
+        case 'network-request-failed':
+          message = 'Network error. Please check your internet connection.';
+          break;
+        case 'too-many-requests':
+          message = 'Too many requests. Please wait and try again later.';
+          break;
+        case 'app-not-authorized':
+          message = 'App not authorized to use Firebase Authentication. Check your Firebase configuration.';
+          break;
+        default:
+          break;
+      }
+      throw FirebaseAuthException(code: e.code, message: message);
+    }
   }
 
   String? _currentVerificationId;
