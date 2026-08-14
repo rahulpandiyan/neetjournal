@@ -286,6 +286,7 @@ class _TodayEntryFormState extends ConsumerState<_TodayEntryForm> {
         SectionHeader(
           title: 'Chapters completed',
           icon: HugeIcons.strokeRoundedCheckmarkCircle01,
+          iconWidget: HeroCheck(done: true, size: 15),
         ),
         const SizedBox(height: 6),
         Text(
@@ -331,10 +332,7 @@ class _TodayEntryFormState extends ConsumerState<_TodayEntryForm> {
                       color: scheme.onPrimary,
                     ),
                   )
-                : const HugeIcon(
-                    icon: HugeIcons.strokeRoundedCheckmarkCircle01,
-                    size: 20,
-                  ),
+                : HeroCheck(done: true, color: scheme.onPrimary, size: 20),
             label: Text(_saving ? 'SAVING...' : 'SAVE JOURNAL'),
           ),
         ),

@@ -1,4 +1,3 @@
-import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:heroicons/heroicons.dart';
@@ -133,15 +132,6 @@ class ScreenHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 34,
-            height: 4,
-            decoration: BoxDecoration(
-              color: scheme.primary,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -247,19 +237,25 @@ class SoftCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final r = BorderRadius.circular(radius);
-    final box = DecoratedBox(
+    // The Material IS the card surface (color + shape), so child ListTiles
+    // find it as their nearest Material ancestor and their ink splashes paint
+    // on it visibly. Shadow/border live on a color-free outer box, which the
+    // framework's "ListTile background may be invisible" check ignores.
+    final surface = Material(
+      color: color ?? scheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(borderRadius: r),
+      clipBehavior: clipBehavior,
+      child: padding == null ? child : Padding(padding: padding!, child: child),
+    );
+    if (!neumorphic && border == null) return Container(margin: margin, child: surface);
+    return Container(
+      margin: margin,
       decoration: BoxDecoration(
-        color: color ?? scheme.surfaceContainerLow,
         borderRadius: r,
         border: border,
         boxShadow: neumorphic ? softShadows(context) : null,
       ),
-      child: padding == null ? child : Padding(padding: padding!, child: child),
-    );
-    if (clipBehavior == Clip.none) return Container(margin: margin, child: box);
-    return Container(
-      margin: margin,
-      child: ClipRRect(borderRadius: r, clipBehavior: clipBehavior, child: box),
+      child: surface,
     );
   }
 }
@@ -301,13 +297,13 @@ class _PressableState extends State<Pressable> {
   }
 }
 
-/// One-shot entrance motion: fades and scales [child] in once, after
-/// [delay]. Use staggered delays for a cascading list of cards.
+/// One-shot entrance motion: fades [child] in once, after [delay]. Use
+/// staggered delays for a cascading list of cards.
 ///
-/// Backed by the `animations` package's [FadeScaleTransition], the canonical
-/// Material fade-and-scale entrance for in-screen content. Unlike a bare
-/// `Transform`/`Opacity` pair, it keeps the render tree semantics-clean while
-/// animating inside a scrollable.
+/// Fade-only on purpose: transform/scale entrance animations inside a
+/// scrollable can leave render-parent data dirty during a semantics flush,
+/// which trips `!semantics.parentDataDirty` on some devices. A plain fade
+/// (render-only, no transform layer) is semantics-clean everywhere.
 class Reveal extends StatefulWidget {
   const Reveal({super.key, required this.child, this.delay = Duration.zero});
 
@@ -321,7 +317,12 @@ class Reveal extends StatefulWidget {
 class _RevealState extends State<Reveal> with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 520),
+    duration: const Duration(milliseconds: 380),
+  );
+
+  late final Animation<double> _opacity = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeOut,
   );
 
   @override
@@ -344,7 +345,7 @@ class _RevealState extends State<Reveal> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return FadeScaleTransition(animation: _controller, child: widget.child);
+    return FadeTransition(opacity: _opacity, child: widget.child);
   }
 }
 
@@ -354,6 +355,7 @@ class SectionHeader extends StatelessWidget {
     super.key,
     required this.title,
     required this.icon,
+    this.iconWidget,
     this.color,
     this.iconColor,
     this.padding = EdgeInsets.zero,
@@ -361,6 +363,7 @@ class SectionHeader extends StatelessWidget {
 
   final String title;
   final List<List<dynamic>> icon;
+  final Widget? iconWidget;
   final Color? color;
   final Color? iconColor;
   final EdgeInsetsGeometry padding;
@@ -379,6 +382,7 @@ class SectionHeader extends StatelessWidget {
             iconSize: 15,
             color: color,
             iconColor: iconColor,
+            child: iconWidget,
           ),
           const SizedBox(width: 10),
           Text(

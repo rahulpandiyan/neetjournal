@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'state/providers.dart';
 import 'theme/app_theme.dart';
-import 'ui/screens/home_shell.dart';
+import 'ui/splash_screen.dart';
 
 class NeetJournalApp extends ConsumerStatefulWidget {
   const NeetJournalApp({super.key});
@@ -24,10 +24,15 @@ class _NeetJournalAppState extends ConsumerState<NeetJournalApp> {
   }
 
   Future<void> _setupNotifications() async {
-    final service = ref.read(notificationsServiceProvider);
-    await service.init();
-    await service.requestPermissions();
-    await syncNotifications(ref);
+    try {
+      final service = ref.read(notificationsServiceProvider);
+      await service.init();
+      await service.requestPermissions();
+      await syncNotifications(ref);
+    } catch (_) {
+      // Notifications are best-effort: never let a platform/init failure
+      // take down the app (e.g. a timezone lookup quirk on Windows/Linux).
+    }
   }
 
   @override
@@ -38,7 +43,7 @@ class _NeetJournalAppState extends ConsumerState<NeetJournalApp> {
       color: AppTheme.light().colorScheme.surface,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      home: const HomeShell(),
+      home: const SplashScreen(),
     );
   }
 }

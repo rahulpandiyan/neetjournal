@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:heroicons/heroicons.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../core/db/tables.dart';
@@ -172,8 +173,9 @@ class _SessionCompleteSheetState extends ConsumerState<SessionCompleteSheet> {
                         color: FocusPalette.ink,
                       ),
                     )
-                  : const HugeIcon(
-                      icon: HugeIcons.strokeRoundedCheckmarkCircle01,
+                  : const HeroIcon(
+                      HeroIcons.checkCircle,
+                      style: HeroIconStyle.outline,
                       size: 20,
                     ),
               label: Text(_saving ? 'SAVING...' : 'SAVE SESSION'),
@@ -191,9 +193,14 @@ class _SessionCompleteSheetState extends ConsumerState<SessionCompleteSheet> {
               'Be honest about how it went so your stats stay truthful.'
         : 'Nice stretch of focus. Wrap it up below.';
     final icon = _earlyExit ? FocusPalette.amber : FocusPalette.leaf;
-    final iconData = _earlyExit
-        ? HugeIcons.strokeRoundedFlag01
-        : HugeIcons.strokeRoundedCheckmarkCircle01;
+    final iconWidget = _earlyExit
+        ? HugeIcon(icon: HugeIcons.strokeRoundedFlag01, color: icon, size: 32)
+        : HeroIcon(
+            HeroIcons.checkCircle,
+            style: HeroIconStyle.outline,
+            color: icon,
+            size: 32,
+          );
 
     return Column(
       children: [
@@ -206,7 +213,7 @@ class _SessionCompleteSheetState extends ConsumerState<SessionCompleteSheet> {
                 : FocusPalette.greenSoft,
             shape: BoxShape.circle,
           ),
-          child: HugeIcon(icon: iconData, color: icon, size: 32),
+          child: iconWidget,
         ),
         const SizedBox(height: 14),
         Text(
@@ -268,11 +275,7 @@ class _SessionCompleteSheetState extends ConsumerState<SessionCompleteSheet> {
         ),
         child: Row(
           children: [
-            HugeIcon(
-              icon: _statusIcon(status),
-              size: 17,
-              color: selected ? FocusPalette.ink : FocusPalette.textDim,
-            ),
+            _statusIcon(status, selected),
             const SizedBox(width: 10),
             Text(
               label,
@@ -288,14 +291,28 @@ class _SessionCompleteSheetState extends ConsumerState<SessionCompleteSheet> {
     );
   }
 
-  List<List<dynamic>> _statusIcon(SessionStatus status) {
+  Widget _statusIcon(SessionStatus status, bool selected) {
+    final color = selected ? FocusPalette.ink : FocusPalette.textDim;
     switch (status) {
       case SessionStatus.completed:
-        return HugeIcons.strokeRoundedCheckmarkCircle01;
+        return HeroIcon(
+          HeroIcons.checkCircle,
+          style: HeroIconStyle.outline,
+          size: 17,
+          color: color,
+        );
       case SessionStatus.partial:
-        return HugeIcons.strokeRoundedProgress01;
+        return HugeIcon(
+          icon: HugeIcons.strokeRoundedProgress01,
+          size: 17,
+          color: color,
+        );
       case SessionStatus.notCompleted:
-        return HugeIcons.strokeRoundedCancelCircle;
+        return HugeIcon(
+          icon: HugeIcons.strokeRoundedCancelCircle,
+          size: 17,
+          color: color,
+        );
     }
   }
 

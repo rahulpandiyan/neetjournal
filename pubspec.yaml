@@ -21,8 +21,6 @@ dependencies:
   flutter_timezone: ^5.1.0
   hugeicons: ^1.1.7
   heroicons: ^0.11.0
-  animations: ^2.2.0
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -33,6 +31,9 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/images/app_logo.png
 
   fonts:
     - family: SpaceGrotesk

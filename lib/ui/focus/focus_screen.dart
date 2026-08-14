@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:heroicons/heroicons.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../state/focus_controller.dart';
@@ -515,8 +516,9 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               color: FocusPalette.greenSoft,
               shape: BoxShape.circle,
             ),
-            child: const HugeIcon(
-              icon: HugeIcons.strokeRoundedCheckmarkCircle01,
+            child: const HeroIcon(
+              HeroIcons.checkCircle,
+              style: HeroIconStyle.outline,
               color: FocusPalette.leaf,
               size: 52,
             ),

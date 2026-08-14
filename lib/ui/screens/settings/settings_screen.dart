@@ -92,12 +92,14 @@ class SettingsScreen extends ConsumerWidget {
                               size: 15,
                             ),
                             const SizedBox(width: 8),
-                            Text(
-                              'Made with ❤️ by Rahul — Bro, I\'ll see you at the finish line.',
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                                height: 1.5,
+                            Flexible(
+                              child: Text(
+                                'Made with ❤️ by Rahul — Bro, I\'ll see you at the finish line.',
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  height: 1.5,
+                                ),
                               ),
                             ),
                           ],

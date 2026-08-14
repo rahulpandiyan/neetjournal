@@ -562,26 +562,45 @@ class _MissedCard extends ConsumerWidget {
     return Reveal(
       child: SoftCard(
         margin: EdgeInsets.zero,
-        color: theme.colorScheme.errorContainer,
-        neumorphic: false,
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '${slot.title} was missed',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.onErrorContainer,
-                fontWeight: FontWeight.w700,
-              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                IconBubble(
+                  icon: HugeIcons.strokeRoundedClock02,
+                  size: 40,
+                  radius: 12,
+                  iconSize: 20,
+                  color: theme.colorScheme.errorContainer,
+                  iconColor: theme.colorScheme.onErrorContainer,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${slot.title} was missed',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'No guilt. Just decide what to do next.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            Text(
-              'No guilt. Just decide what to do next.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onErrorContainer,
-              ),
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             Wrap(
               spacing: 8,
               runSpacing: 8,

@@ -184,9 +184,6 @@ class NotificationsService {
 
   Future<void> init() async {
     if (_initialized) return;
-    final timezone = await FlutterTimezone.getLocalTimezone();
-    tz.initializeTimeZones();
-    tz.setLocalLocation(tz.getLocation(timezone.identifier));
     const settings = InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       iOS: DarwinInitializationSettings(
@@ -194,9 +191,53 @@ class NotificationsService {
         requestBadgePermission: false,
         requestSoundPermission: false,
       ),
+      linux: LinuxInitializationSettings(defaultActionName: 'Open Studyn'),
     );
+    // Initialize the plugin first so show()/zonedSchedule() always work, even
+    // if the platform timezone lookup below misbehaves.
     await _plugin.initialize(settings: settings);
     _initialized = true;
+
+    // The local timezone is best-effort: Windows/Linux can report legacy
+    // names (e.g. Asia/Calcutta) missing from the tz database, or the lookup
+    // can fail outright. Never let that break notification scheduling.
+    try {
+      final timezone = await FlutterTimezone.getLocalTimezone();
+      tz.initializeTimeZones();
+      tz.setLocalLocation(_resolveLocalLocation(timezone.identifier));
+    } catch (_) {
+      tz.initializeTimeZones();
+      tz.setLocalLocation(tz.UTC);
+    }
+  }
+
+  /// Maps a platform-reported timezone to one the tz database knows.
+  ///
+  /// Windows and Linux can report legacy IANA names (e.g. `Asia/Calcutta`)
+  /// that aren't in the bundled database. Falling back to UTC keeps
+  /// scheduling alive rather than crashing notification init.
+  tz.Location _resolveLocalLocation(String identifier) {
+    const aliases = <String, String>{
+      'Asia/Calcutta': 'Asia/Kolkata',
+      'Asia/Katmandu': 'Asia/Kathmandu',
+      'Etc/Greenwich': 'UTC',
+      'GMT': 'UTC',
+      'GMT0': 'UTC',
+    };
+    tz.Location resolve(String name) {
+      final mapped = aliases[name] ?? name;
+      try {
+        return tz.getLocation(mapped);
+      } on tz.LocationNotFoundException {
+        try {
+          return tz.getLocation(mapped.toLowerCase());
+        } on tz.LocationNotFoundException {
+          return tz.UTC;
+        }
+      }
+    }
+
+    return resolve(identifier);
   }
 
   /// Requests notification permission (and asks the OS to keep alarms
@@ -210,7 +251,11 @@ class NotificationsService {
     await android?.requestNotificationsPermission();
   }
 
-  Future<void> showImmediately({required String title, required String body}) {
+  Future<void> showImmediately({
+    required String title,
+    required String body,
+  }) async {
+    await init();
     return _plugin.show(
       id: 9999,
       title: title,
@@ -230,6 +275,7 @@ class NotificationsService {
     required String title,
     required String body,
   }) async {
+    await init();
     final now = tz.TZDateTime.now(tz.local);
     var scheduled = tz.TZDateTime(
       tz.local,
@@ -261,6 +307,7 @@ class NotificationsService {
     required String title,
     required String body,
   }) async {
+    await init();
     final now = tz.TZDateTime.now(tz.local);
     var scheduled = tz.TZDateTime(
       tz.local,
