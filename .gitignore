@@ -51,3 +51,7 @@ skills-lock.json
 
 # Machine-local Gradle toolchain file (generated)
 android/gradle/gradle-daemon-jvm.properties
+
+# Android signing key (keystore + credentials)
+android/key.properties
+android/*.jks
