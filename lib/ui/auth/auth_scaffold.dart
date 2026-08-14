@@ -108,13 +108,13 @@ class GoogleG extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     // Match the text color for consistency
-    final iconColor = isDark ? const Color(0xFFFFFFFF) : const Color(0xFF1F2937);
+    final iconColor = isDark ? Colors.white : const Color(0xFF1F2937);
 
     return SvgPicture.asset(
       'assets/svg/google_logo.svg',
       width: size,
       height: size,
-      color: iconColor,
+      colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
     );
   }
 }
@@ -136,7 +136,6 @@ class GoogleSignInButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
     return GestureDetector(

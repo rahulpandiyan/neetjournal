@@ -104,10 +104,13 @@ class AuthService {
     // browser; the `google_sign_in_*` desktop federations do this for us.
     final account = await google.authenticate();
     if (account == null) {
-      throw FirebaseAuthException(
-        code: 'aborted-by-user',
-        message: 'Google sign-in was cancelled.',
-      );
+      // User cancelled or aborted
+      return _auth.currentUser != null
+          ? UserCredential(user: _auth.currentUser, additionalUserInfo: null)
+          : throw FirebaseAuthException(
+              code: 'aborted-by-user',
+              message: 'Google sign-in was cancelled.',
+            );
     }
     final authentication = account.authentication;
     final credential = GoogleAuthProvider.credential(

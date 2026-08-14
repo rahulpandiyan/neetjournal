@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/auth_providers.dart';
 import '../ui/auth/login_screen.dart';
-import '../ui/auth/signup_screen.dart';
 import '../ui/onboarding/oath_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
