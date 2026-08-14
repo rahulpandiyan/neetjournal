@@ -1,6 +1,6 @@
-# neet_journal
+# studyn
 
-A new Flutter project.
+Studyn — a study companion for NEET aspirants.
 
 ## Getting Started
 

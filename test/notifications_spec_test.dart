@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:neet_journal/core/db/database.dart';
-import 'package:neet_journal/core/db/tables.dart';
-import 'package:neet_journal/core/services/notifications_service.dart';
-import 'package:neet_journal/core/utils/dates.dart';
+import 'package:studyn/core/db/database.dart';
+import 'package:studyn/core/db/tables.dart';
+import 'package:studyn/core/services/notifications_service.dart';
+import 'package:studyn/core/utils/dates.dart';
 
 TimetableSlot slot({
   required int id,

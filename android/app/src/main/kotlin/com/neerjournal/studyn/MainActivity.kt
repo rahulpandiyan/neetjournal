@@ -1,4 +1,4 @@
-package com.neetjournal.neet_journal
+package com.neerjournal.studyn
 
 import io.flutter.embedding.android.FlutterActivity
 

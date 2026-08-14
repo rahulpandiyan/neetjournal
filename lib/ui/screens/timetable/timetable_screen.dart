@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:heroicons/heroicons.dart';
 
 import '../../../core/db/database.dart';
 import '../../../core/db/tables.dart';
@@ -179,36 +180,14 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
         child: template.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text('$e')),
-          data: (_) => ListView(
-            padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
+          data: (_) => Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(0, 18, 0, 14),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              ScreenHeader(
+                title: 'Timetable',
+                subtitle: 'The timetable guides; it never forces.',
+                action: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Timetable',
-                            style: theme.textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.5,
-                              height: 1.1,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            'The timetable guides; it never forces.',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                     IconButton(
                       tooltip: _editMode ? 'Done editing' : 'Edit timetable',
                       style: IconButton.styleFrom(
@@ -219,11 +198,13 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
                             ? theme.colorScheme.onPrimary
                             : theme.colorScheme.onSurface,
                       ),
-                      icon: HugeIcon(
-                        icon: _editMode
-                            ? HugeIcons.strokeRoundedCheckmarkCircle02
-                            : HugeIcons.strokeRoundedEdit02,
-                      ),
+                      icon: _editMode
+                          ? HeroIcon(
+                              HeroIcons.check,
+                              style: HeroIconStyle.outline,
+                              color: theme.colorScheme.onPrimary,
+                            )
+                          : const HugeIcon(icon: HugeIcons.strokeRoundedEdit02),
                       onPressed: () => setState(() {
                         _editMode = !_editMode;
                         _editToday = false;
@@ -255,84 +236,107 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
                   ],
                 ),
               ),
-              SizedBox(
-                height: 46,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 7,
-                  separatorBuilder: (_, _) => const SizedBox(width: 8),
-                  itemBuilder: (context, i) {
-                    final day = i + 1;
-                    final selected = _day == day;
-                    final isToday = day == DateTime.now().weekday;
-                    return _DayPill(
-                      label: _dayNames[i],
-                      selected: selected,
-                      isToday: isToday,
-                      onTap: () => _selectDay(day),
-                    );
-                  },
-                ),
-              ),
-              if (_editMode) ...[
-                const SizedBox(height: 12),
-                Card(
-                  margin: EdgeInsets.zero,
-                  color: _editToday
-                      ? theme.colorScheme.tertiaryContainer
-                      : theme.colorScheme.secondaryContainer,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        HugeIcon(
-                          icon: _editToday
-                              ? HugeIcons.strokeRoundedCalendar01
-                              : HugeIcons.strokeRoundedCalendarSetting01,
-                          size: 20,
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 0,
+                    horizontal: 20,
+                  ),
+                  children: [
+                    SizedBox(
+                      height: 46,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: 7,
+                        separatorBuilder: (_, _) => const SizedBox(width: 8),
+                        itemBuilder: (context, i) {
+                          final day = i + 1;
+                          final selected = _day == day;
+                          final isToday = day == DateTime.now().weekday;
+                          return _DayPill(
+                            label: _dayNames[i],
+                            selected: selected,
+                            isToday: isToday,
+                            onTap: () => _selectDay(day),
+                          );
+                        },
+                      ),
+                    ),
+                    if (_editMode) ...[
+                      const SizedBox(height: 12),
+                      Reveal(
+                        child: SoftCard(
+                          margin: EdgeInsets.zero,
+                          color: _editToday
+                              ? theme.colorScheme.tertiaryContainer
+                              : theme.colorScheme.secondaryContainer,
+                          neumorphic: false,
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              children: [
+                                HugeIcon(
+                                  icon: _editToday
+                                      ? HugeIcons.strokeRoundedCalendar01
+                                      : HugeIcons
+                                            .strokeRoundedCalendarSetting01,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    _editToday
+                                        ? 'Editing only today. The weekly schedule is untouched.'
+                                        : 'Editing the weekly schedule for ${_dayNames[_day - 1]}. Tap a session to change it.',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
+                      ),
+                    ],
+                    if (_editMode && isToday && !_editToday) ...[
+                      const SizedBox(height: 8),
+                      TextButton.icon(
+                        onPressed: _editTodayOnly,
+                        icon: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedCalendar01,
+                        ),
+                        label: const Text('Edit today only'),
+                      ),
+                    ],
+                    if (scopeError != null)
+                      Center(child: Text('$scopeError'))
+                    else ...[
+                      const SizedBox(height: 12),
+                      for (var i = 0; i < slots.length; i++)
+                        Reveal(
+                          delay: Duration(milliseconds: i * 40),
+                          child: _SlotTile(
+                            slot: slots[i],
+                            editing: _editMode,
+                            onTap: _editMode ? () => _editSlot(slots[i]) : null,
+                          ),
+                        ),
+                      if (_editMode) ...[
+                        const SizedBox(height: 4),
+                        OutlinedButton.icon(
+                          onPressed: _addSlot,
+                          icon: const HugeIcon(
+                            icon: HugeIcons.strokeRoundedPlusSign,
+                          ),
+                          label: Text(
                             _editToday
-                                ? 'Editing only today. The weekly schedule is untouched.'
-                                : 'Editing the weekly schedule for ${_dayNames[_day - 1]}. Tap a session to change it.',
+                                ? 'Add a session today'
+                                : 'Add a session',
                           ),
                         ),
                       ],
-                    ),
-                  ),
+                    ],
+                  ],
                 ),
-              ],
-              if (_editMode && isToday && !_editToday) ...[
-                const SizedBox(height: 8),
-                TextButton.icon(
-                  onPressed: _editTodayOnly,
-                  icon: const HugeIcon(icon: HugeIcons.strokeRoundedCalendar01),
-                  label: const Text('Edit today only'),
-                ),
-              ],
-              if (scopeError != null)
-                Center(child: Text('$scopeError'))
-              else ...[
-                const SizedBox(height: 12),
-                for (final s in slots)
-                  _SlotTile(
-                    slot: s,
-                    editing: _editMode,
-                    onTap: _editMode ? () => _editSlot(s) : null,
-                  ),
-                if (_editMode) ...[
-                  const SizedBox(height: 4),
-                  OutlinedButton.icon(
-                    onPressed: _addSlot,
-                    icon: const HugeIcon(icon: HugeIcons.strokeRoundedPlusSign),
-                    label: Text(
-                      _editToday ? 'Add a session today' : 'Add a session',
-                    ),
-                  ),
-                ],
-              ],
+              ),
             ],
           ),
         ),

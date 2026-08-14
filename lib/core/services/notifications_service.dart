@@ -171,11 +171,13 @@ class NotificationsService {
 
   static const _details = NotificationDetails(
     android: AndroidNotificationDetails(
-      'study_reminders',
+      'study_reminders_sound',
       'Study reminders',
       channelDescription: 'Study, rest and sleep reminders',
       importance: Importance.high,
       priority: Priority.high,
+      sound: RawResourceAndroidNotificationSound('notification'),
+      playSound: true,
     ),
     iOS: DarwinNotificationDetails(),
   );

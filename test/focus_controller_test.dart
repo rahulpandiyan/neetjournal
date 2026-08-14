@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:neet_journal/state/focus_controller.dart';
+import 'package:studyn/state/focus_controller.dart';
 
 void main() {
   late ProviderContainer container;

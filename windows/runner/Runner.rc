@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.neetjournal" "\0"
-            VALUE "FileDescription", "neet_journal" "\0"
+            VALUE "CompanyName", "com.neerjournal" "\0"
+            VALUE "FileDescription", "Studyn" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "neet_journal" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.neetjournal. All rights reserved." "\0"
-            VALUE "OriginalFilename", "neet_journal.exe" "\0"
-            VALUE "ProductName", "neet_journal" "\0"
+            VALUE "InternalName", "studyn" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.neerjournal. All rights reserved." "\0"
+            VALUE "OriginalFilename", "studyn.exe" "\0"
+            VALUE "ProductName", "Studyn" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

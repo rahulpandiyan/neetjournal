@@ -45,7 +45,6 @@ class _JournalTabsState extends State<_JournalTabs>
         ScreenHeader(
           title: 'Journal',
           subtitle: DateFormat('EEEE, d MMM').format(DateTime.now()),
-          icon: HugeIcons.strokeRoundedNotebook01,
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -227,9 +226,17 @@ class _TodayEntryFormState extends ConsumerState<_TodayEntryForm> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       children: [
-        _MoodCard(mood: _mood, onChanged: (m) => setState(() => _mood = m)),
+        Reveal(
+          child: _MoodCard(
+            mood: _mood,
+            onChanged: (m) => setState(() => _mood = m),
+          ),
+        ),
         const SizedBox(height: 20),
-        _StudyCard(),
+        Reveal(
+          delay: const Duration(milliseconds: 60),
+          child: const _StudyCard(),
+        ),
         const SizedBox(height: 24),
         SectionHeader(
           title: 'What did I learn?',
@@ -271,7 +278,10 @@ class _TodayEntryFormState extends ConsumerState<_TodayEntryForm> {
           }),
         ),
         const SizedBox(height: 12),
-        _PendingPreview(),
+        Reveal(
+          delay: const Duration(milliseconds: 120),
+          child: _PendingPreview(),
+        ),
         const SizedBox(height: 24),
         SectionHeader(
           title: 'Chapters completed',
@@ -285,42 +295,48 @@ class _TodayEntryFormState extends ConsumerState<_TodayEntryForm> {
           ),
         ),
         const SizedBox(height: 12),
-        ChapterChecklist(),
+        Reveal(
+          delay: const Duration(milliseconds: 180),
+          child: ChapterChecklist(),
+        ),
         const SizedBox(height: 28),
-        FilledButton.icon(
-          onPressed: _saving
-              ? null
-              : () async {
-                  final messenger = ScaffoldMessenger.of(context);
-                  setState(() => _saving = true);
-                  await ref
-                      .read(journalRepositoryProvider)
-                      .save(
-                        day: DateTime.now(),
-                        learnedText: _learned.text.trim(),
-                        mood: _mood,
-                        isComplete: true,
-                      );
-                  if (!mounted) return;
-                  setState(() => _saving = false);
-                  messenger.showSnackBar(
-                    const SnackBar(content: Text('Journal saved')),
-                  );
-                },
-          icon: _saving
-              ? const SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
+        Reveal(
+          delay: const Duration(milliseconds: 240),
+          child: FilledButton.icon(
+            onPressed: _saving
+                ? null
+                : () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    setState(() => _saving = true);
+                    await ref
+                        .read(journalRepositoryProvider)
+                        .save(
+                          day: DateTime.now(),
+                          learnedText: _learned.text.trim(),
+                          mood: _mood,
+                          isComplete: true,
+                        );
+                    if (!mounted) return;
+                    setState(() => _saving = false);
+                    messenger.showSnackBar(
+                      const SnackBar(content: Text('Journal saved')),
+                    );
+                  },
+            icon: _saving
+                ? SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: scheme.onPrimary,
+                    ),
+                  )
+                : const HugeIcon(
+                    icon: HugeIcons.strokeRoundedCheckmarkCircle01,
+                    size: 20,
                   ),
-                )
-              : const HugeIcon(
-                  icon: HugeIcons.strokeRoundedCheckmarkCircle01,
-                  size: 20,
-                ),
-          label: Text(_saving ? 'SAVING...' : 'SAVE JOURNAL'),
+            label: Text(_saving ? 'SAVING...' : 'SAVE JOURNAL'),
+          ),
         ),
       ],
     );
@@ -335,7 +351,7 @@ class _MoodCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return SoftCard(
       margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
@@ -429,7 +445,7 @@ class _StudyCard extends ConsumerWidget {
     final scheme = theme.colorScheme;
     final sessionsAsync = ref.watch(todaySessionsProvider);
 
-    return Card(
+    return SoftCard(
       margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
@@ -479,10 +495,10 @@ class _StudyCard extends ConsumerWidget {
                             color: scheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(11),
                           ),
-                          child: const HugeIcon(
-                            icon: HugeIcons.strokeRoundedCheckmarkCircle01,
+                          child: HeroCheck(
+                            done: true,
+                            color: scheme.primary,
                             size: 18,
-                            color: Colors.green,
                           ),
                         ),
                         title: Text(
@@ -522,7 +538,7 @@ class _PendingComposer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Card(
+    return SoftCard(
       margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
@@ -584,20 +600,20 @@ class _PendingPreview extends ConsumerWidget {
     final openAsync = ref.watch(openPendingProvider);
 
     return openAsync.when(
-      loading: () => const Card(
+      loading: () => const SoftCard(
         margin: EdgeInsets.zero,
         child: Padding(
           padding: EdgeInsets.all(16),
           child: LinearProgressIndicator(),
         ),
       ),
-      error: (e, _) => Card(
+      error: (e, _) => SoftCard(
         margin: EdgeInsets.zero,
         child: Padding(padding: const EdgeInsets.all(16), child: Text('$e')),
       ),
       data: (open) {
         if (open.isEmpty) {
-          return Card(
+          return SoftCard(
             margin: EdgeInsets.zero,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
@@ -628,7 +644,7 @@ class _PendingPreview extends ConsumerWidget {
             ),
           );
         }
-        return Card(
+        return SoftCard(
           margin: EdgeInsets.zero,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
@@ -714,7 +730,7 @@ class _History extends ConsumerWidget {
           itemBuilder: (context, i) {
             final e = entries[i];
             final date = strToDate(e.date);
-            return Card(
+            return SoftCard(
               margin: const EdgeInsets.only(bottom: 10),
               child: Padding(
                 padding: const EdgeInsets.all(14),
@@ -815,7 +831,7 @@ class _PendingTab extends ConsumerWidget {
                 : diff == 0
                 ? theme.colorScheme.tertiary
                 : theme.colorScheme.onSurfaceVariant;
-            return Card(
+            return SoftCard(
               margin: const EdgeInsets.only(bottom: 10),
               child: ListTile(
                 contentPadding: const EdgeInsets.fromLTRB(16, 8, 8, 8),

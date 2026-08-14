@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
-/// NEET Journal design language (locked).
+/// Studyn design language (modern refresh).
 ///
 /// Direction: "Serene Focus" — calm, focused, encouraging, natural.
 /// - Primary: Forest green (#2E7D32) — growth and progress.
 /// - Secondary: Sage green (#66BB6A) — softer, supporting touch.
 /// - Accent: Goldenrod (#FFC107) — countdown, alerts, energy moments.
-/// - Neutrals: light gray / white smoke surfaces, charcoal text.
-/// - Dark mode: #1E1E1E background, #2C2C2C surfaces, #E0E0E0 text.
-/// - Signature: rounded-20 cards, pill tab indicator, hairline dividers,
-///   tabular numerals wherever numbers matter.
+/// - Typography: Space Grotesk (display/headings) + DM Sans (body).
+/// - Surfaces: borderless tonal cards, 24px radius, 8pt spacing grid.
+/// - Signature: big Space Grotesk numerals, tinted hero headers, pill
+///   nav indicator, hairline-free cards.
 class AppTheme {
   static ThemeData light() => _base(_scheme(Brightness.light));
 
@@ -44,11 +44,12 @@ class AppTheme {
         errorContainer: Color(0xFFFFDAD6),
         onErrorContainer: Color(0xFF410002),
       ).copyWith(
-        surfaceContainerLowest: const Color(0xFFFFFFFF),
-        surfaceContainerLow: const Color(0xFFF2F5F1),
-        surfaceContainer: const Color(0xFFEBF0EB),
-        surfaceContainerHigh: const Color(0xFFE3E9E3),
-        surfaceContainerHighest: const Color(0xFFDDE4DC),
+        surface: const Color(0xFFF0F3ED),
+        surfaceContainerLowest: const Color(0xFFF9FBF7),
+        surfaceContainerLow: const Color(0xFFF2F5F0),
+        surfaceContainer: const Color(0xFFEBF0E9),
+        surfaceContainerHigh: const Color(0xFFE4EAE2),
+        surfaceContainerHighest: const Color(0xFFDDE4DB),
       );
     }
     return const ColorScheme.dark(
@@ -78,11 +79,12 @@ class AppTheme {
       errorContainer: Color(0xFF93000A),
       onErrorContainer: Color(0xFFFFDAD6),
     ).copyWith(
-      surfaceContainerLowest: const Color(0xFF161616),
-      surfaceContainerLow: const Color(0xFF262626),
-      surfaceContainer: const Color(0xFF2C2C2C),
-      surfaceContainerHigh: const Color(0xFF353535),
-      surfaceContainerHighest: const Color(0xFF414141),
+      surface: const Color(0xFF151812),
+      surfaceContainerLowest: const Color(0xFF1B1E17),
+      surfaceContainerLow: const Color(0xFF22261E),
+      surfaceContainer: const Color(0xFF292D24),
+      surfaceContainerHigh: const Color(0xFF32372D),
+      surfaceContainerHighest: const Color(0xFF3D4237),
     );
   }
 
@@ -94,27 +96,29 @@ class AppTheme {
     );
     return base.copyWith(
       scaffoldBackgroundColor: scheme.surface,
-      splashFactory: InkRipple.splashFactory,
+      splashColor: scheme.onSurface.withValues(alpha: 0.10),
+      highlightColor: scheme.onSurface.withValues(alpha: 0.06),
+      // Cards: borderless, softly toned, generous radius.
       cardTheme: CardThemeData(
         elevation: 0,
         color: scheme.surfaceContainerLow,
         margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.4)),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        clipBehavior: Clip.antiAlias,
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(54),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
           ),
           textStyle: const TextStyle(
+            fontFamily: 'DMSans',
             fontSize: 15.5,
             fontWeight: FontWeight.w700,
           ),
-          overlayColor: scheme.onSurface.withValues(alpha: 0.08),
+          elevation: 0,
+          overlayColor: scheme.onPrimary.withValues(alpha: 0.12),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -125,6 +129,7 @@ class AppTheme {
           ),
           side: BorderSide(color: scheme.outlineVariant),
           textStyle: const TextStyle(
+            fontFamily: 'DMSans',
             fontSize: 14.5,
             fontWeight: FontWeight.w600,
           ),
@@ -136,7 +141,11 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(
+            fontFamily: 'DMSans',
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
           overlayColor: scheme.onSurface.withValues(alpha: 0.08),
         ),
       ),
@@ -146,11 +155,13 @@ class AppTheme {
         secondarySelectedColor: scheme.primaryContainer,
         showCheckmark: false,
         labelStyle: TextStyle(
+          fontFamily: 'DMSans',
           fontSize: 13.5,
           fontWeight: FontWeight.w600,
           color: scheme.onSurfaceVariant,
         ),
         secondaryLabelStyle: TextStyle(
+          fontFamily: 'DMSans',
           fontSize: 13.5,
           fontWeight: FontWeight.w700,
           color: scheme.onPrimaryContainer,
@@ -192,10 +203,12 @@ class AppTheme {
         labelColor: scheme.onPrimaryContainer,
         unselectedLabelColor: scheme.onSurfaceVariant,
         labelStyle: const TextStyle(
+          fontFamily: 'SpaceGrotesk',
           fontSize: 13.5,
           fontWeight: FontWeight.w700,
         ),
         unselectedLabelStyle: const TextStyle(
+          fontFamily: 'SpaceGrotesk',
           fontSize: 13.5,
           fontWeight: FontWeight.w500,
         ),
@@ -208,19 +221,21 @@ class AppTheme {
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: scheme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: scheme.surface,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        backgroundColor: scheme.inverseSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         insetPadding: const EdgeInsets.all(16),
         contentTextStyle: const TextStyle(
+          fontFamily: 'DMSans',
           fontSize: 14,
           fontWeight: FontWeight.w500,
         ),
@@ -230,27 +245,153 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
+        titleTextStyle: TextStyle(
+          fontFamily: 'SpaceGrotesk',
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          color: scheme.onSurface,
+        ),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: scheme.surfaceContainer,
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: scheme.primaryContainer,
+        height: 68,
+        elevation: 0,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            color: states.contains(WidgetState.selected)
+                ? scheme.onPrimaryContainer
+                : scheme.onSurfaceVariant,
+          ),
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => TextStyle(
+            fontFamily: 'DMSans',
+            fontSize: 11.5,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w700
+                : FontWeight.w500,
+            color: states.contains(WidgetState.selected)
+                ? scheme.onPrimaryContainer
+                : scheme.onSurfaceVariant,
+          ),
+        ),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? scheme.primary
+              : scheme.outlineVariant,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? scheme.primaryContainer
+              : scheme.surfaceContainerHighest,
+        ),
+        trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+      ),
+      listTileTheme: ListTileThemeData(
+        iconColor: scheme.onSurfaceVariant,
+        textColor: scheme.onSurface,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          foregroundColor: scheme.onSurfaceVariant,
+        ),
       ),
       textTheme: base.textTheme.copyWith(
+        displayLarge: const TextStyle(
+          fontFamily: 'SpaceGrotesk',
+          fontSize: 40,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -1,
+          height: 1.05,
+        ),
+        displayMedium: const TextStyle(
+          fontFamily: 'SpaceGrotesk',
+          fontSize: 34,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.8,
+          height: 1.1,
+        ),
+        headlineLarge: const TextStyle(
+          fontFamily: 'SpaceGrotesk',
+          fontSize: 30,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.6,
+          height: 1.15,
+        ),
+        headlineMedium: const TextStyle(
+          fontFamily: 'SpaceGrotesk',
+          fontSize: 26,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.5,
+          height: 1.2,
+        ),
         headlineSmall: const TextStyle(
-          fontSize: 24,
+          fontFamily: 'SpaceGrotesk',
+          fontSize: 23,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.3,
           height: 1.2,
         ),
-        titleLarge: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-        titleMedium: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        titleLarge: const TextStyle(
+          fontFamily: 'SpaceGrotesk',
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
+        ),
+        titleMedium: const TextStyle(
+          fontFamily: 'SpaceGrotesk',
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
         titleSmall: const TextStyle(
-          fontSize: 13.5,
+          fontFamily: 'SpaceGrotesk',
+          fontSize: 14,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.2,
         ),
         labelLarge: const TextStyle(
+          fontFamily: 'DMSans',
           fontSize: 14.5,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.1,
         ),
-        bodyMedium: const TextStyle(fontSize: 14.5, height: 1.45),
-        bodySmall: const TextStyle(fontSize: 12.5, height: 1.4),
+        labelMedium: const TextStyle(
+          fontFamily: 'DMSans',
+          fontSize: 12.5,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.3,
+        ),
+        labelSmall: const TextStyle(
+          fontFamily: 'DMSans',
+          fontSize: 11.5,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.4,
+        ),
+        bodyLarge: const TextStyle(
+          fontFamily: 'DMSans',
+          fontSize: 16,
+          height: 1.5,
+        ),
+        bodyMedium: const TextStyle(
+          fontFamily: 'DMSans',
+          fontSize: 14.5,
+          height: 1.45,
+        ),
+        bodySmall: const TextStyle(
+          fontFamily: 'DMSans',
+          fontSize: 12.5,
+          height: 1.4,
+        ),
       ),
     );
   }

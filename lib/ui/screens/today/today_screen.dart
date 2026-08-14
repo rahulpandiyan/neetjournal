@@ -31,57 +31,58 @@ class TodayScreen extends ConsumerWidget {
           final missed = _missedSlots(data);
 
           return SafeArea(
-            child: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ScreenHeader(
+                  title: '${greetingFor(data.now)} 👋',
+                  subtitle: DateFormat('EEEE, d MMMM').format(data.now),
+                ),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 6, 20, 32),
                     children: [
-                      ScreenHeader(
-                        title: '${greetingFor(data.now)} 👋',
-                        subtitle: DateFormat('EEEE, d MMMM').format(data.now),
-                        icon: HugeIcons.strokeRoundedCalendar01,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 4),
-                            CountdownCard(daysLeft: data.daysLeft),
-                            const SizedBox(height: 16),
-                            _BadDayToggle(active: data.badDay, now: data.now),
-                            if (data.badDay) ...[
-                              const SizedBox(height: 16),
-                              _BadDayCard(
-                                subjectIds: studySubjectIds(data.slots),
+                      CountdownCard(daysLeft: data.daysLeft),
+                      const SizedBox(height: 16),
+                      if (nextSlot != null) ...[
+                        IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(child: _NextCard(slot: nextSlot)),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _BadDayToggle(
+                                  active: data.badDay,
+                                  now: data.now,
+                                ),
                               ),
                             ],
-                            if (missed.isNotEmpty) ...[
-                              const SizedBox(height: 16),
-                              _MissedCard(slots: missed),
-                            ],
-                            if (data.pending.isNotEmpty) ...[
-                              const SizedBox(height: 16),
-                              _PendingCard(pending: data.pending),
-                            ],
-                            const SizedBox(height: 16),
-                            _NowCard(slot: nowSlot),
-                            const SizedBox(height: 16),
-                            if (nextSlot != null) ...[
-                              _NextCard(slot: nextSlot),
-                              const SizedBox(height: 24),
-                            ],
-                            SectionHeader(
-                              title: "Today's sessions",
-                              icon: HugeIcons.strokeRoundedBook02,
-                            ),
-                            const SizedBox(height: 8),
-                            _TodayList(slots: data.slots, data: data),
-                            const SizedBox(height: 32),
-                          ],
+                          ),
                         ),
+                      ] else
+                        _BadDayToggle(active: data.badDay, now: data.now),
+                      if (data.badDay) ...[
+                        const SizedBox(height: 16),
+                        _BadDayCard(subjectIds: studySubjectIds(data.slots)),
+                      ],
+                      if (missed.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        _MissedCard(slots: missed),
+                      ],
+                      if (data.pending.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        _PendingCard(pending: data.pending),
+                      ],
+                      const SizedBox(height: 16),
+                      _NowCard(slot: nowSlot),
+                      const SizedBox(height: 24),
+                      SectionHeader(
+                        title: "Today's sessions",
+                        icon: HugeIcons.strokeRoundedBook02,
                       ),
+                      const SizedBox(height: 8),
+                      _TodayList(slots: data.slots, data: data),
                     ],
                   ),
                 ),
@@ -140,50 +141,79 @@ class _NowCard extends ConsumerWidget {
     final subjects = ref.watch(subjectsByIdProvider).valueOrNull;
     final s = slot;
     if (s == null) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Text('No activity right now. Rest, or start a pending task.'),
+      return Reveal(
+        child: SoftCard(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            'No activity right now. Rest, or start a pending task.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
         ),
       );
     }
     final subjectName = subjects?[s.subjectId]?.name;
-    return Card(
-      margin: EdgeInsets.zero,
-      color: theme.colorScheme.primaryContainer,
-      child: Padding(
+    final scheme = theme.colorScheme;
+    return Reveal(
+      delay: const Duration(milliseconds: 120),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              scheme.primaryContainer,
+              scheme.primaryContainer.withValues(alpha: 0.55),
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: scheme.primary.withValues(alpha: 0.16),
+              offset: const Offset(0, 8),
+              blurRadius: 20,
+            ),
+          ],
+        ),
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'NOW',
-              style: theme.textTheme.labelLarge?.copyWith(
-                letterSpacing: 1.5,
-                color: theme.colorScheme.onPrimaryContainer,
-              ),
+            Row(
+              children: [
+                const _LiveDot(),
+                const SizedBox(width: 8),
+                Text(
+                  'NOW',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    letterSpacing: 1.5,
+                    color: scheme.onPrimaryContainer,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${timeOfDay(s.startMin)} – ${timeOfDay(s.endMin)}',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: scheme.onPrimaryContainer,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 6),
-            Text(
-              '${timeOfDay(s.startMin)} – ${timeOfDay(s.endMin)}',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer,
-              ),
-            ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             if (subjectName != null)
               Text(
                 subjectName,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onPrimaryContainer,
+                  color: scheme.onPrimaryContainer,
                 ),
               ),
             Text(
               s.title,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onPrimaryContainer,
+                color: scheme.onPrimaryContainer,
               ),
             ),
             if (s.target != null && s.target!.isNotEmpty) ...[
@@ -191,7 +221,7 @@ class _NowCard extends ConsumerWidget {
               Text(
                 s.target!,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onPrimaryContainer,
+                  color: scheme.onPrimaryContainer,
                 ),
               ),
             ],
@@ -243,18 +273,59 @@ class _BadDayToggle extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    return Card(
-      margin: EdgeInsets.zero,
-      child: SwitchListTile(
-        secondary: HugeIcon(
-          icon: HugeIcons.strokeRoundedSad01,
-          color: theme.colorScheme.tertiary,
+    void toggle() =>
+        ref.read(settingsRepositoryProvider).setBadDay(now, !active);
+    return Reveal(
+      delay: const Duration(milliseconds: 80),
+      child: SoftCard(
+        padding: EdgeInsets.zero,
+        child: InkWell(
+          onTap: toggle,
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    IconBubble(
+                      icon: HugeIcons.strokeRoundedSad01,
+                      size: 30,
+                      radius: 10,
+                      iconSize: 17,
+                      color: theme.colorScheme.tertiaryContainer,
+                      iconColor: theme.colorScheme.onTertiaryContainer,
+                    ),
+                    const Spacer(),
+                    ExcludeSemantics(
+                      child: Switch(
+                        value: active,
+                        onChanged: (v) => ref
+                            .read(settingsRepositoryProvider)
+                            .setBadDay(now, v),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  "I'm having a bad day",
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Reduce today to a 30-minute minimum',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-        title: const Text("I'm having a bad day"),
-        subtitle: const Text('Reduce today to a 30-minute minimum per subject'),
-        value: active,
-        onChanged: (v) =>
-            ref.read(settingsRepositoryProvider).setBadDay(now, v),
       ),
     );
   }
@@ -279,55 +350,54 @@ class _BadDayCard extends ConsumerWidget {
     ].whereType<String>().toList();
     final onColor = theme.colorScheme.onTertiaryContainer;
 
-    return Card(
+    return SoftCard(
       margin: EdgeInsets.zero,
       color: theme.colorScheme.tertiaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "TODAY'S MINIMUM",
-              style: theme.textTheme.labelLarge?.copyWith(
-                letterSpacing: 1.5,
-                color: onColor,
-              ),
+      neumorphic: false,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "TODAY'S MINIMUM",
+            style: theme.textTheme.labelLarge?.copyWith(
+              letterSpacing: 1.5,
+              color: onColor,
             ),
-            const SizedBox(height: 10),
-            if (names.isEmpty)
-              Text(
-                'No study sessions today — rest up.',
-                style: theme.textTheme.bodyMedium?.copyWith(color: onColor),
-              )
-            else
-              for (final name in names)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    '• $name — 30 min',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: onColor,
-                      fontWeight: FontWeight.w600,
-                    ),
+          ),
+          const SizedBox(height: 10),
+          if (names.isEmpty)
+            Text(
+              'No study sessions today — rest up.',
+              style: theme.textTheme.bodyMedium?.copyWith(color: onColor),
+            )
+          else
+            for (final name in names)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  '• $name — 30 min',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: onColor,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-            const SizedBox(height: 8),
-            Text(
-              'Everything else can move.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: onColor,
-                fontStyle: FontStyle.italic,
               ),
+          const SizedBox(height: 8),
+          Text(
+            'Everything else can move.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: onColor,
+              fontStyle: FontStyle.italic,
             ),
-            const SizedBox(height: 4),
-            Text(
-              "Don't try to recover everything tonight. "
-              'Do what you can and reset tomorrow.',
-              style: theme.textTheme.bodySmall?.copyWith(color: onColor),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "Don't try to recover everything tonight. "
+            'Do what you can and reset tomorrow.',
+            style: theme.textTheme.bodySmall?.copyWith(color: onColor),
+          ),
+        ],
       ),
     );
   }
@@ -341,23 +411,52 @@ class _NextCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      margin: EdgeInsets.zero,
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: HugeIcon(
-          icon: HugeIcons.strokeRoundedClock02,
-          color: theme.colorScheme.primary,
-        ),
-        title: Text(
-          'NEXT — ${timeOfDay(slot.startMin)}',
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: theme.colorScheme.primary,
-          ),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(slot.title),
+    return Reveal(
+      delay: const Duration(milliseconds: 40),
+      child: SoftCard(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                IconBubble(
+                  icon: HugeIcons.strokeRoundedClock02,
+                  size: 30,
+                  radius: 10,
+                  iconSize: 17,
+                  color: theme.colorScheme.primaryContainer,
+                  iconColor: theme.colorScheme.onPrimaryContainer,
+                ),
+                const Spacer(),
+                Text(
+                  timeOfDay(slot.startMin),
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'NEXT',
+              style: theme.textTheme.labelMedium?.copyWith(
+                letterSpacing: 1.5,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              slot.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                height: 1.2,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -377,57 +476,73 @@ class _TodayList extends ConsumerWidget {
     final studySlots = slots
         .where((s) => s.activityType.isStudyLike && !s.isOptional)
         .toList();
-    return Card(
-      margin: EdgeInsets.zero,
+    return SoftCard(
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Column(
         children: [
           for (final s in studySlots)
-            ListTile(
-              dense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 4,
-              ),
-              leading: IconBubble(
-                icon: data.completedSlotIds.contains(s.id)
-                    ? HugeIcons.strokeRoundedCheckmarkCircle01
-                    : HugeIcons.strokeRoundedRadioButton,
-                color: data.completedSlotIds.contains(s.id)
-                    ? Colors.green.withValues(alpha: 0.14)
-                    : scheme.surfaceContainerHighest,
-                iconColor: data.completedSlotIds.contains(s.id)
-                    ? Colors.green
-                    : scheme.outline,
-              ),
-              title: Text(
-                s.title,
-                style: TextStyle(
-                  decoration: data.completedSlotIds.contains(s.id)
-                      ? TextDecoration.lineThrough
-                      : null,
-                  color: data.completedSlotIds.contains(s.id)
-                      ? scheme.onSurfaceVariant
-                      : null,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              trailing: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: scheme.surfaceContainerHigh,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  timeOfDay(s.startMin),
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurfaceVariant,
+            Builder(
+              builder: (context) {
+                final done = data.completedSlotIds.contains(s.id);
+                final badDayActive = data.badDay && !done;
+                return ListTile(
+                  dense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
                   ),
-                ),
-              ),
+                  leading: IconBubble(
+                    icon: HugeIcons.strokeRoundedRadioButton,
+                    color: done
+                        ? scheme.primary.withValues(alpha: 0.14)
+                        : scheme.surfaceContainerHighest,
+                    iconColor: done ? scheme.primary : scheme.outline,
+                    child: HeroCheck(
+                      done: done,
+                      color: done ? scheme.primary : scheme.outline,
+                      size: 16,
+                    ),
+                  ),
+                  title: Text(
+                    s.title,
+                    style: TextStyle(
+                      decoration: done ? TextDecoration.lineThrough : null,
+                      color: done ? scheme.onSurfaceVariant : null,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: badDayActive
+                      ? Text(
+                          '${timeOfDay(s.startMin)} · 30 min minimum',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.tertiary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        )
+                      : null,
+                  trailing: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: badDayActive
+                          ? scheme.tertiaryContainer
+                          : scheme.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      badDayActive ? '30 MIN' : timeOfDay(s.startMin),
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: badDayActive
+                            ? scheme.onTertiaryContainer
+                            : scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
         ],
       ),
@@ -444,10 +559,11 @@ class _MissedCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final slot = slots.first;
-    return Card(
-      margin: EdgeInsets.zero,
-      color: theme.colorScheme.errorContainer,
-      child: Padding(
+    return Reveal(
+      child: SoftCard(
+        margin: EdgeInsets.zero,
+        color: theme.colorScheme.errorContainer,
+        neumorphic: false,
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -656,8 +772,8 @@ class _PendingCard extends ConsumerWidget {
           icon: HugeIcons.strokeRoundedHourglass,
         ),
         const SizedBox(height: 8),
-        Card(
-          margin: EdgeInsets.zero,
+        SoftCard(
+          padding: const EdgeInsets.symmetric(vertical: 6),
           child: Column(
             children: [
               for (final p in pending.take(3))
@@ -717,5 +833,43 @@ class _PendingCard extends ConsumerWidget {
         break;
     }
     await syncNotifications(ref);
+  }
+}
+
+/// Softly pulsing dot used to signal "live" states (e.g. the NOW session).
+class _LiveDot extends StatefulWidget {
+  const _LiveDot();
+
+  @override
+  State<_LiveDot> createState() => _LiveDotState();
+}
+
+class _LiveDotState extends State<_LiveDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+    return FadeTransition(
+      opacity: Tween<double>(begin: 0.35, end: 1).animate(_controller),
+      child: ScaleTransition(
+        scale: Tween<double>(begin: 0.8, end: 1).animate(_controller),
+        child: Container(
+          width: 9,
+          height: 9,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+      ),
+    );
   }
 }

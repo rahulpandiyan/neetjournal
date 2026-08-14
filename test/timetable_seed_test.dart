@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:neet_journal/core/db/tables.dart';
-import 'package:neet_journal/data/seed/timetable_seed.dart';
+import 'package:studyn/core/db/tables.dart';
+import 'package:studyn/data/seed/timetable_seed.dart';
 
 void main() {
   const p = 1;

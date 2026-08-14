@@ -20,53 +20,67 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(vertical: 0),
+        child: Column(
           children: [
-            ScreenHeader(
+            const ScreenHeader(
               title: 'Progress',
               subtitle: 'Consistency and learning — not maximum hours.',
-              icon: HugeIcons.strokeRoundedChartBarLine,
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 0),
                 children: [
-                  const SectionHeader(
-                    title: 'Subjects & Chapters',
-                    icon: HugeIcons.strokeRoundedBook02,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Tap a subject to tick off the chapters you have learned.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SectionHeader(
+                          title: 'Subjects & Chapters',
+                          icon: HugeIcons.strokeRoundedBook02,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Tap a subject to tick off the chapters you have learned.',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Reveal(
+                          delay: const Duration(milliseconds: 80),
+                          child: const ChapterChecklist(),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const ChapterChecklist(),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
-            const _TestTrackingCard(),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 24),
-                  const SectionHeader(
-                    title: 'This Week',
-                    icon: HugeIcons.strokeRoundedCalendar02,
+                  Reveal(
+                    delay: const Duration(milliseconds: 160),
+                    child: const _TestTrackingCard(),
                   ),
-                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 24),
+                        const SectionHeader(
+                          title: 'This Week',
+                          icon: HugeIcons.strokeRoundedCalendar02,
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                  ),
+                  Reveal(
+                    delay: const Duration(milliseconds: 240),
+                    child: _buildThisWeek(theme),
+                  ),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
-            _buildThisWeek(theme),
-            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -76,7 +90,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
   Widget _buildThisWeek(ThemeData theme) {
     final stats = ref.watch(weekStatsProvider).valueOrNull;
     if (stats == null) {
-      return Card(
+      return SoftCard(
         margin: const EdgeInsets.symmetric(horizontal: 20),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -95,7 +109,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
       (a, b) => a > b ? a : b,
     );
 
-    return Card(
+    return SoftCard(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -144,7 +158,7 @@ class _TestTrackingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
+    return SoftCard(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -181,25 +195,38 @@ class _StatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Expanded(
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHigh.withValues(alpha: 0.7),
+            borderRadius: BorderRadius.circular(16),
           ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          child: Column(
+            children: [
+              Text(
+                value,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: scheme.primary,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -216,7 +243,9 @@ class _DailyFocusChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final barHeight = 96.0;
+    final today = DateTime.now().weekday;
 
     return SizedBox(
       height: barHeight + 20,
@@ -234,27 +263,44 @@ class _DailyFocusChart extends StatelessWidget {
                       '${dailyFocus[day] ?? 0}',
                       style: theme.textTheme.labelSmall?.copyWith(
                         fontSize: 10,
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color: scheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Container(
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.easeOutCubic,
                       height: maxValue == 0
                           ? 2
                           : (dailyFocus[day] ?? 0) / maxValue * barHeight,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: maxValue == 0
-                            ? theme.colorScheme.surfaceContainerHighest
-                            : theme.colorScheme.primary,
-                        borderRadius: BorderRadius.circular(3),
+                        gradient: day == today
+                            ? LinearGradient(
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
+                                colors: [
+                                  scheme.primary,
+                                  scheme.primary.withValues(alpha: 0.7),
+                                ],
+                              )
+                            : null,
+                        color: day == today
+                            ? null
+                            : scheme.primary.withValues(alpha: 0.28),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       _labels[day - 1],
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color: day == today
+                            ? scheme.primary
+                            : scheme.onSurfaceVariant,
+                        fontWeight: day == today
+                            ? FontWeight.w800
+                            : FontWeight.w500,
                       ),
                     ),
                   ],

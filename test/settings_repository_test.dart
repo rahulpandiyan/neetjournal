@@ -1,8 +1,8 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:neet_journal/core/db/database.dart';
-import 'package:neet_journal/data/repositories/settings_repository.dart';
+import 'package:studyn/core/db/database.dart';
+import 'package:studyn/data/repositories/settings_repository.dart';
 
 void main() {
   late AppDatabase db;

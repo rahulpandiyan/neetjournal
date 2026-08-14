@@ -33,8 +33,9 @@ class _NeetJournalAppState extends ConsumerState<NeetJournalApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'NEET Journal',
+      title: 'Studyn',
       debugShowCheckedModeBanner: false,
+      color: AppTheme.light().colorScheme.surface,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       home: const HomeShell(),

@@ -1,4 +1,4 @@
-# NEET Journal
+# Studyn
 
 Flutter + Dart study companion. Material 3, Riverpod, Drift (SQLite).
 

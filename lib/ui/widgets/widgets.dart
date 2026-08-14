@@ -1,10 +1,27 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:heroicons/heroicons.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../core/db/database.dart';
 import '../../core/db/tables.dart';
 import '../../state/providers.dart';
+
+/// Filled heart glyph (path data for [HugeIcon]).
+const List<List<dynamic>> filledHeart = [
+  [
+    'path',
+    {
+      'd':
+          'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 '
+          '2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09 '
+          'C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5 '
+          'c0 3.78-3.4 6.86-8.55 11.54L12 21.35z',
+      'fill': 'currentColor',
+    },
+  ],
+];
 
 /// Rounded-square chip that holds a HugeIcon, used as a recurring visual motif
 /// (section headers, list leading badges, header accents).
@@ -17,6 +34,7 @@ class IconBubble extends StatelessWidget {
     this.iconSize = 15,
     this.color,
     this.iconColor,
+    this.child,
   });
 
   final List<List<dynamic>> icon;
@@ -25,6 +43,10 @@ class IconBubble extends StatelessWidget {
   final double iconSize;
   final Color? color;
   final Color? iconColor;
+
+  /// Optional custom icon widget (e.g. a [HeroIcon]); takes precedence over
+  /// [icon].
+  final Widget? child;
 
   @override
   Widget build(BuildContext context) {
@@ -36,65 +58,293 @@ class IconBubble extends StatelessWidget {
         color: color ?? scheme.primaryContainer,
         borderRadius: BorderRadius.circular(radius),
       ),
-      child: HugeIcon(
-        icon: icon,
-        size: iconSize,
-        color: iconColor ?? scheme.onPrimaryContainer,
+      child:
+          child ??
+          HugeIcon(
+            icon: icon,
+            size: iconSize,
+            color: iconColor ?? scheme.onPrimaryContainer,
+          ),
+    );
+  }
+}
+
+/// Heroicons-style check state: a clean outline check-circle when [done],
+/// an empty circle otherwise. Used for completion states across the app.
+class HeroCheck extends StatelessWidget {
+  const HeroCheck({super.key, required this.done, this.color, this.size = 22});
+
+  final bool done;
+  final Color? color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    if (done) {
+      return HeroIcon(
+        HeroIcons.checkCircle,
+        style: HeroIconStyle.outline,
+        color: color,
+        size: size,
+      );
+    }
+    final borderColor = color ?? Theme.of(context).colorScheme.outlineVariant;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: borderColor, width: 1.5),
       ),
     );
   }
 }
 
-/// Large screen header: bold title + subtitle + icon accent bubble on the
-/// right. Shared across tabs for a consistent, modern top edge.
+/// Fixed app header: clean bold title + subtitle with a slim brand accent.
+/// Shared across tabs; screens pin it above their scrollable content.
 class ScreenHeader extends StatelessWidget {
   const ScreenHeader({
     super.key,
     required this.title,
     required this.subtitle,
-    required this.icon,
-    this.padding = const EdgeInsets.fromLTRB(20, 18, 20, 14),
+    this.action,
+    this.showBack,
+    this.padding = const EdgeInsets.fromLTRB(20, 16, 20, 10),
   });
 
   final String title;
   final String subtitle;
-  final List<List<dynamic>> icon;
+  final Widget? action;
+
+  /// When `null` (default), a back button is shown automatically whenever
+  /// the route can pop (i.e. this screen was pushed), so desktop/web users
+  /// without a system back gesture always have a way back.
+  final bool? showBack;
+
   final EdgeInsetsGeometry padding;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final back = showBack ?? Navigator.maybeOf(context)?.canPop() ?? false;
     return Padding(
       padding: padding,
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
-                    height: 1.1,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+          Container(
+            width: 34,
+            height: 4,
+            decoration: BoxDecoration(
+              color: scheme.primary,
+              borderRadius: BorderRadius.circular(2),
             ),
           ),
-          IconBubble(icon: icon, size: 46, radius: 15, iconSize: 23),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (back) ...[
+                IconButton(
+                  onPressed: () => Navigator.maybePop(context),
+                  tooltip: 'Back',
+                  icon: const HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowLeft01,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 4),
+              ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.6,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (action != null) ...[const SizedBox(width: 12), action!],
+            ],
+          ),
         ],
       ),
     );
+  }
+}
+
+/// Neumorphic surface: soft dual shadows (light highlight top-left, shade
+/// bottom-right) so cards read as gently raised "soft 3D" tiles.
+List<BoxShadow> softShadows(BuildContext context, {double strength = 1}) {
+  if (Theme.of(context).brightness == Brightness.dark) {
+    return [
+      BoxShadow(
+        color: const Color(0xFF000000).withValues(alpha: 0.42 * strength),
+        offset: const Offset(6, 6),
+        blurRadius: 14,
+      ),
+      BoxShadow(
+        color: Colors.white.withValues(alpha: 0.045 * strength),
+        offset: const Offset(-4, -4),
+        blurRadius: 10,
+      ),
+    ];
+  }
+  return [
+    BoxShadow(
+      color: Colors.white.withValues(alpha: 0.95 * strength),
+      offset: const Offset(-6, -6),
+      blurRadius: 14,
+    ),
+    BoxShadow(
+      color: const Color(0xFF33402F).withValues(alpha: 0.10 * strength),
+      offset: const Offset(6, 7),
+      blurRadius: 16,
+    ),
+  ];
+}
+
+/// Card with a touch of neumorphism — drop-in replacement for [Card] used by
+/// the main screens. Falls back to a plain surface when [neumorphic] is off
+/// (for inset/colored tiles that shouldn't float).
+class SoftCard extends StatelessWidget {
+  const SoftCard({
+    super.key,
+    this.margin,
+    this.padding,
+    this.color,
+    this.radius = 24,
+    this.neumorphic = true,
+    this.border,
+    this.clipBehavior = Clip.none,
+    required this.child,
+  });
+
+  final EdgeInsetsGeometry? margin;
+  final EdgeInsetsGeometry? padding;
+  final Color? color;
+  final double radius;
+  final bool neumorphic;
+  final BoxBorder? border;
+  final Clip clipBehavior;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final r = BorderRadius.circular(radius);
+    final box = DecoratedBox(
+      decoration: BoxDecoration(
+        color: color ?? scheme.surfaceContainerLow,
+        borderRadius: r,
+        border: border,
+        boxShadow: neumorphic ? softShadows(context) : null,
+      ),
+      child: padding == null ? child : Padding(padding: padding!, child: child),
+    );
+    if (clipBehavior == Clip.none) return Container(margin: margin, child: box);
+    return Container(
+      margin: margin,
+      child: ClipRRect(borderRadius: r, clipBehavior: clipBehavior, child: box),
+    );
+  }
+}
+
+/// Subtle 3D: the child gently scales down while pressed, then springs back.
+class Pressable extends StatefulWidget {
+  const Pressable({
+    super.key,
+    required this.onPress,
+    required this.child,
+    this.scale = 0.97,
+  });
+
+  final VoidCallback onPress;
+  final Widget child;
+  final double scale;
+
+  @override
+  State<Pressable> createState() => _PressableState();
+}
+
+class _PressableState extends State<Pressable> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScale(
+      scale: _pressed ? widget.scale : 1,
+      duration: const Duration(milliseconds: 120),
+      curve: Curves.easeOut,
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _pressed = true),
+        onTapUp: (_) => setState(() => _pressed = false),
+        onTapCancel: () => setState(() => _pressed = false),
+        onTap: widget.onPress,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+/// One-shot entrance motion: fades and scales [child] in once, after
+/// [delay]. Use staggered delays for a cascading list of cards.
+///
+/// Backed by the `animations` package's [FadeScaleTransition], the canonical
+/// Material fade-and-scale entrance for in-screen content. Unlike a bare
+/// `Transform`/`Opacity` pair, it keeps the render tree semantics-clean while
+/// animating inside a scrollable.
+class Reveal extends StatefulWidget {
+  const Reveal({super.key, required this.child, this.delay = Duration.zero});
+
+  final Widget child;
+  final Duration delay;
+
+  @override
+  State<Reveal> createState() => _RevealState();
+}
+
+class _RevealState extends State<Reveal> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 520),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.delay == Duration.zero) {
+      _controller.forward();
+    } else {
+      Future.delayed(widget.delay, () {
+        if (mounted) _controller.forward();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeScaleTransition(animation: _controller, child: widget.child);
   }
 }
 
@@ -372,12 +622,10 @@ class _ChapterRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
         child: Row(
           children: [
-            HugeIcon(
-              icon: learned
-                  ? HugeIcons.strokeRoundedCheckmarkCircle01
-                  : HugeIcons.strokeRoundedRadioButton,
-              size: 22,
+            HeroCheck(
+              done: learned,
               color: learned ? color : theme.colorScheme.outlineVariant,
+              size: 22,
             ),
             const SizedBox(width: 12),
             Expanded(

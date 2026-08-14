@@ -8,6 +8,7 @@ import '../../../core/db/database.dart';
 import '../../../core/db/tables.dart';
 import '../../../core/utils/dates.dart';
 import '../../../state/providers.dart';
+import '../../widgets/widgets.dart';
 
 class TestsScreen extends ConsumerWidget {
   const TestsScreen({super.key});
@@ -17,53 +18,71 @@ class TestsScreen extends ConsumerWidget {
     final testsAsync = ref.watch(testsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Test Tracking')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _addTest(context, ref),
         icon: const HugeIcon(icon: HugeIcons.strokeRoundedPlusSign),
         label: const Text('Record Test'),
       ),
-      body: testsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
-        data: (tests) {
-          if (tests.isEmpty) {
-            return const _EmptyState();
-          }
-          final avg =
-              tests.fold<int>(0, (a, t) => a + t.totalScore) / tests.length;
-          final best = tests.fold<int>(
-            0,
-            (a, t) => t.totalScore > a ? t.totalScore : a,
-          );
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Card(
-                margin: EdgeInsets.zero,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const ScreenHeader(
+              title: 'Test Tracking',
+              subtitle: 'Your mocks and their scorelines',
+            ),
+            Expanded(
+              child: testsAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(child: Text('$e')),
+                data: (tests) {
+                  if (tests.isEmpty) {
+                    return const _EmptyState();
+                  }
+                  final avg =
+                      tests.fold<int>(0, (a, t) => a + t.totalScore) /
+                      tests.length;
+                  final best = tests.fold<int>(
+                    0,
+                    (a, t) => t.totalScore > a ? t.totalScore : a,
+                  );
+                  return ListView(
+                    padding: const EdgeInsets.all(16),
                     children: [
-                      _SummaryStat(label: 'Tests', value: '${tests.length}'),
-                      _SummaryStat(label: 'Best total', value: '$best'),
-                      _SummaryStat(
-                        label: 'Average',
-                        value: avg.round().toString(),
+                      Reveal(
+                        child: SoftCard(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              _SummaryStat(
+                                label: 'Tests',
+                                value: '${tests.length}',
+                              ),
+                              _SummaryStat(label: 'Best total', value: '$best'),
+                              _SummaryStat(
+                                label: 'Average',
+                                value: avg.round().toString(),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
+                      const SizedBox(height: 16),
+                      for (final (i, t) in tests.indexed) ...[
+                        Reveal(
+                          delay: Duration(milliseconds: 80 * (i + 1)),
+                          child: _TestCard(test: t),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      const SizedBox(height: 88),
                     ],
-                  ),
-                ),
+                  );
+                },
               ),
-              const SizedBox(height: 16),
-              for (final t in tests) ...[
-                _TestCard(test: t),
-                const SizedBox(height: 8),
-              ],
-              const SizedBox(height: 88),
-            ],
-          );
-        },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -177,7 +196,7 @@ class _TestCardState extends ConsumerState<_TestCard> {
     final t = widget.test;
     final mistakesAsync = ref.watch(testMistakesProvider(t.id));
 
-    return Card(
+    return SoftCard(
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -292,25 +311,27 @@ class _TestCardState extends ConsumerState<_TestCard> {
                             ListTile(
                               dense: true,
                               contentPadding: EdgeInsets.zero,
-                              leading: HugeIcon(
-                                icon: m.isRevisioned
-                                    ? HugeIcons.strokeRoundedCheckmarkCircle01
-                                    : HugeIcons.strokeRoundedAlert02,
-                                size: 20,
-                                color: m.isRevisioned
-                                    ? Colors.green
-                                    : theme.colorScheme.tertiary,
-                              ),
+                              leading: m.isRevisioned
+                                  ? HeroCheck(
+                                      done: true,
+                                      size: 20,
+                                      color: theme.colorScheme.primary,
+                                    )
+                                  : HugeIcon(
+                                      icon: HugeIcons.strokeRoundedAlert02,
+                                      size: 20,
+                                      color: theme.colorScheme.tertiary,
+                                    ),
                               title: Text(m.description),
                               subtitle: Text(
                                 '${m.category.label}'
                                 '${m.subjectId != null ? ' · ${_subjectName(ref, m.subjectId!)}' : ''}',
                               ),
                               trailing: m.isRevisioned
-                                  ? const HugeIcon(
+                                  ? HugeIcon(
                                       icon: HugeIcons.strokeRoundedRefresh01,
                                       size: 18,
-                                      color: Colors.green,
+                                      color: theme.colorScheme.primary,
                                     )
                                   : IconButton(
                                       tooltip: 'Add to revision',

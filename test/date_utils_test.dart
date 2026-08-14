@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:neet_journal/core/utils/dates.dart';
+import 'package:studyn/core/utils/dates.dart';
 
 void main() {
   test('daysUntil counts inclusive of start day', () {

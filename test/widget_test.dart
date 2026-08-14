@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:neet_journal/ui/widgets/countdown_card.dart';
-import 'package:neet_journal/ui/widgets/widgets.dart';
+import 'package:studyn/ui/widgets/countdown_card.dart';
+import 'package:studyn/ui/widgets/widgets.dart';
 
 void main() {
   testWidgets('CountdownCard shows remaining days', (tester) async {
@@ -11,7 +11,7 @@ void main() {
     );
 
     expect(find.text('287'), findsOneWidget);
-    expect(find.text('DAYS LEFT'), findsOneWidget);
+    expect(find.text('287 DAYS TO GO'), findsOneWidget);
     expect(find.text('NEET 2027'), findsOneWidget);
   });
 

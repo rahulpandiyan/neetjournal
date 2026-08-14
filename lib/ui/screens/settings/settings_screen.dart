@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../state/providers.dart';
 import '../../widgets/widgets.dart';
+import 'note_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -14,38 +15,106 @@ class SettingsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     return Scaffold(
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(vertical: 0),
+        child: Column(
           children: [
             const ScreenHeader(
               title: 'Settings',
               subtitle: 'Focus, reminders, and your NEET date',
-              icon: HugeIcons.strokeRoundedSettings02,
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(20, 6, 20, 32),
                 children: [
-                  _ExamDateTile(),
-                  Divider(),
-                  _PomodoroTile(),
-                  Divider(),
-                  _WaterReminderTile(),
-                  Divider(),
-                  _NotificationsTile(),
+                  const Reveal(
+                    child: SoftCard(
+                      padding: EdgeInsets.symmetric(vertical: 4),
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        children: [
+                          _ExamDateTile(),
+                          Divider(),
+                          _PomodoroTile(),
+                          Divider(),
+                          _WaterReminderTile(),
+                          Divider(),
+                          _NotificationsTile(),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Reveal(
+                    delay: const Duration(milliseconds: 120),
+                    child: SoftCard(
+                      padding: EdgeInsets.zero,
+                      clipBehavior: Clip.antiAlias,
+                      child: ListTile(
+                        leading: const IconBubble(
+                          icon: filledHeart,
+                          color: Color(0xFFE53950),
+                          iconColor: Colors.white,
+                          size: 34,
+                          radius: 12,
+                          iconSize: 18,
+                        ),
+                        title: const Text(
+                          'A Note for You',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        subtitle: const Text(
+                          'A letter from Rahul',
+                          style: TextStyle(fontSize: 13),
+                        ),
+                        trailing: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedArrowRight02,
+                        ),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const NoteScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Reveal(
+                    delay: const Duration(milliseconds: 200),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            HugeIcon(
+                              icon: filledHeart,
+                              color: theme.colorScheme.primary,
+                              size: 15,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Made with ❤️ by Rahul — Bro, I\'ll see you at the finish line.',
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'The app is a coach, not a controller.\nMissed sessions? Just decide what to do next — no guilt.',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'The app is a coach, not a controller.\nMissed sessions? Just decide what to do next — no guilt.',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  height: 1.5,
-                ),
               ),
             ),
           ],
@@ -368,7 +437,7 @@ class _NotificationsTile extends ConsumerWidget {
                         ref
                             .read(notificationsServiceProvider)
                             .showImmediately(
-                              title: 'NEET Journal',
+                              title: 'Studyn',
                               body: 'Reminders are working. Keep going!',
                             );
                       },

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:neet_journal/data/repositories/progress_repository.dart';
+import 'package:studyn/data/repositories/progress_repository.dart';
 
 void main() {
   test('revision schedule follows the Day 1/3/7/14/30 cycle', () {
