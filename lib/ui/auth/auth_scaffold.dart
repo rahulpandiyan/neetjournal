@@ -106,11 +106,14 @@ class GoogleG extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final greenColor = isDark ? const Color(0xFF83CE86) : const Color(0xFF2E7D32);
+
     return SvgPicture.asset(
       'assets/svg/google_logo.svg',
       width: size,
       height: size,
-      color: const Color(0xFF4285F4),
+      color: greenColor,
     );
   }
 }
