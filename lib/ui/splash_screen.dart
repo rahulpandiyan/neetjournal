@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,14 +8,14 @@ import '../ui/auth/login_screen.dart';
 import '../ui/auth/signup_screen.dart';
 import '../ui/onboarding/oath_screen.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
@@ -26,30 +25,42 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _navigate() async {
     // Wait for Firebase to initialize (if configured).
     final container = ProviderScope.containerOf(context, listen: false);
-    final firebase = container.read(firebaseAppProvider);
-    if (firebase == null) {
-      // Firebase not configured: show placeholder auth gate.
-      if (!mounted) return;
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+    final firebaseApp = await container.read(firebaseAppProvider.future);
+
+    if (!mounted) return;
+
+    if (firebaseApp == null) {
+      // Firebase not configured: go directly to login.
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
       return;
     }
 
-    // Listen for auth changes; once resolved, decide next.
-    final asyncValue = container.read(authStateProvider);
-    asyncValue.whenData((user) {
+    // Firebase initialized: check auth state.
+    final authState = await container.read(authStateProvider.future);
+    if (!mounted) return;
+
+    if (authState == null) {
+      // Not logged in.
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+    } else {
+      // Logged in: check oath status.
+      final oathTaken = await container.read(oathTakenProvider.future);
       if (!mounted) return;
-      if (user == null) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
-      } else {
+
+      if (oathTaken == false) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const OathScreen()),
         );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
       }
-    });
+    }
   }
 
   @override
