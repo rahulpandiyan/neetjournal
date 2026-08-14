@@ -101,6 +101,12 @@ final waterReminderProvider = StreamProvider<({bool enabled, int minutes})>((
   return ref.watch(settingsRepositoryProvider).watchWaterReminder();
 });
 
+final stretchReminderProvider = StreamProvider<({bool enabled, int minutes})>((
+  ref,
+) {
+  return ref.watch(settingsRepositoryProvider).watchStretchReminder();
+});
+
 final templateByDayProvider = StreamProvider<Map<int, List<TimetableSlot>>>((
   ref,
 ) {

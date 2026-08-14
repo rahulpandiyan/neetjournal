@@ -65,6 +65,21 @@ class SettingsRepository {
     await _db.setSetting('waterReminderMinutes', '$minutes');
   }
 
+  Stream<({bool enabled, int minutes})> watchStretchReminder() {
+    return _db.select(_db.appSettings).watch().map((rows) {
+      final byKey = {for (final r in rows) r.key: r.value};
+      return (
+        enabled: (byKey['stretchReminderEnabled'] ?? '1') == '1',
+        minutes: int.tryParse(byKey['stretchReminderMinutes'] ?? '') ?? 25,
+      );
+    });
+  }
+
+  Future<void> setStretchReminder(bool enabled, int minutes) async {
+    await _db.setSetting('stretchReminderEnabled', enabled ? '1' : '0');
+    await _db.setSetting('stretchReminderMinutes', '$minutes');
+  }
+
   Stream<NotificationPrefs> watchNotificationPrefs() {
     return _db.select(_db.appSettings).watch().map((rows) {
       final byKey = {for (final r in rows) r.key: r.value};

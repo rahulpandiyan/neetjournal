@@ -51,4 +51,16 @@ void main() {
     expect(updated.sleep, isTrue);
     expect(updated.morning, isTrue);
   });
+
+  test('stretch reminder defaults on at 25 minutes and persists', () async {
+    final reminder = await repo.watchStretchReminder().first;
+    expect(reminder.enabled, isTrue);
+    expect(reminder.minutes, 25);
+
+    await repo.setStretchReminder(false, 30);
+
+    final updated = await repo.watchStretchReminder().first;
+    expect(updated.enabled, isFalse);
+    expect(updated.minutes, 30);
+  });
 }

@@ -179,6 +179,14 @@ class AppDatabase extends _$AppDatabase {
       mode: InsertMode.insertOrIgnore,
     );
     await into(appSettings).insert(
+      AppSettingsCompanion.insert(key: 'stretchReminderEnabled', value: '1'),
+      mode: InsertMode.insertOrIgnore,
+    );
+    await into(appSettings).insert(
+      AppSettingsCompanion.insert(key: 'stretchReminderMinutes', value: '25'),
+      mode: InsertMode.insertOrIgnore,
+    );
+    await into(appSettings).insert(
       AppSettingsCompanion.insert(key: 'studyRemindersEnabled', value: '1'),
       mode: InsertMode.insertOrIgnore,
     );

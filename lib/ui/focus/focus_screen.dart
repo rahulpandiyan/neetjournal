@@ -29,6 +29,9 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
   /// dialog fires once per interval instead of every rebuild.
   String? _lastWaterKey;
 
+  /// Key of the stretch/eye-break reminder already shown, same semantics.
+  String? _lastStretchKey;
+
   @override
   void initState() {
     super.initState();
@@ -114,6 +117,22 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
           );
     } catch (_) {
       // Best-effort: the wrap-up sheet still lets the user save.
+    }
+  }
+
+  /// OS notification that the focus session is done and the break is starting.
+  Future<void> _notifyBreakStart() async {
+    try {
+      await ref
+          .read(notificationsServiceProvider)
+          .showImmediately(
+            title: 'Time for your break',
+            body:
+                'Your focus session is done. Stand up, drink water, rest your '
+                'eyes.',
+          );
+    } catch (_) {
+      // Best-effort: the break still shows on screen.
     }
   }
 
@@ -325,6 +344,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       if (next.phase == FocusPhase.sessionComplete &&
           prev?.phase != FocusPhase.sessionComplete) {
         _autoRecord(next);
+        _notifyBreakStart();
       }
     });
 
@@ -341,27 +361,32 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     final remaining = state.remaining();
     final timerText = _fmt(remaining);
 
-    // Drink-water reminder: shows a dialog at each interval boundary and once
-    // more in the final 90s of the session, so short sessions never miss it.
+    // Drink-water and stretch nudges during a focus session. Each fires at its
+    // configured interval and once more in the final 90s so short sessions
+    // never miss one; the focus timer keeps running through both.
     final water =
         ref.watch(waterReminderProvider).valueOrNull ??
         (enabled: true, minutes: 30);
-    final (enabled: waterEnabled, minutes: waterMinutes) = water;
+    final stretch =
+        ref.watch(stretchReminderProvider).valueOrNull ??
+        (enabled: true, minutes: 25);
+
+    final active = state.focusDuration - remaining;
     String? waterKey;
-    if (phase == FocusPhase.focusing && waterEnabled) {
-      final active = state.focusDuration - remaining;
-      final cycle = waterMinutes * 60;
-      final atBoundary =
-          active.inSeconds >= cycle && active.inSeconds % cycle < 12;
-      final finalStretch =
-          remaining.inSeconds > 0 &&
-          remaining.inSeconds <= 90 &&
-          (active.inSeconds < cycle || active.inSeconds % cycle > cycle - 90);
-      if (atBoundary) {
-        waterKey = 'cycle-${active.inSeconds ~/ cycle}';
-      } else if (finalStretch) {
-        waterKey = 'final';
-      }
+    if (phase == FocusPhase.focusing && water.enabled) {
+      waterKey = _reminderKey(
+        intervalMinutes: water.minutes,
+        active: active,
+        remaining: remaining,
+      );
+    }
+    String? stretchKey;
+    if (phase == FocusPhase.focusing && stretch.enabled) {
+      stretchKey = _reminderKey(
+        intervalMinutes: stretch.minutes,
+        active: active,
+        remaining: remaining,
+      );
     }
     if (waterKey != null && waterKey != _lastWaterKey) {
       final key = waterKey;
@@ -372,6 +397,16 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       });
     } else if (phase != FocusPhase.focusing) {
       _lastWaterKey = null;
+    }
+    if (stretchKey != null && stretchKey != _lastStretchKey) {
+      final key = stretchKey;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _lastStretchKey = key;
+        _showStretchDialog();
+      });
+    } else if (phase != FocusPhase.focusing) {
+      _lastStretchKey = null;
     }
 
     return Scaffold(
@@ -418,6 +453,26 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         ),
       ),
     );
+  }
+
+  /// Interval key for a recurring in-session reminder, or null if the current
+  /// moment is not a reminder moment. Also fires once in the final 90 seconds
+  /// so short sessions still get a nudge.
+  String? _reminderKey({
+    required int intervalMinutes,
+    required Duration active,
+    required Duration remaining,
+  }) {
+    final cycle = intervalMinutes * 60;
+    final atBoundary =
+        active.inSeconds >= cycle && active.inSeconds % cycle < 12;
+    final finalStretch =
+        remaining.inSeconds > 0 &&
+        remaining.inSeconds <= 90 &&
+        (active.inSeconds < cycle || active.inSeconds % cycle > cycle - 90);
+    if (atBoundary) return 'cycle-${active.inSeconds ~/ cycle}';
+    if (finalStretch) return 'final';
+    return null;
   }
 
   Future<void> _showWaterDialog() async {
@@ -473,6 +528,87 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                 const SizedBox(height: 8),
                 const Text(
                   'You are in a focus flow. Sip a glass of water, stay hydrated.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: FocusPalette.textSoft,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: FocusPalette.leaf,
+                    foregroundColor: FocusPalette.ink,
+                  ),
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Got it'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    } finally {
+      _dialogOpen = false;
+    }
+  }
+
+  Future<void> _showStretchDialog() async {
+    if (_dialogOpen || _sheetOpen) return;
+    _dialogOpen = true;
+    unawaited(
+      ref
+          .read(notificationsServiceProvider)
+          .showImmediately(
+            title: 'Time to stretch',
+            body:
+                'Stand up, roll your shoulders, rest your eyes for 30 seconds. '
+                'Your timer is still running.',
+          )
+          .catchError((_) {}),
+    );
+    try {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: true,
+        builder: (ctx) => Dialog(
+          backgroundColor: FocusPalette.panel,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: const BoxDecoration(
+                    color: FocusPalette.greenSoft,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const HugeIcon(
+                    icon: HugeIcons.strokeRoundedYoga01,
+                    color: FocusPalette.leaf,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Time to stretch',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: FocusPalette.text,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Stand up, roll your shoulders, rest your eyes for '
+                  '30 seconds. Your timer is still running.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: FocusPalette.textSoft,

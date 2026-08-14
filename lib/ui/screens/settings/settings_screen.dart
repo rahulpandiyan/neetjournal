@@ -37,6 +37,8 @@ class SettingsScreen extends ConsumerWidget {
                           Divider(),
                           _WaterReminderTile(),
                           Divider(),
+                          _StretchReminderTile(),
+                          Divider(),
                           _NotificationsTile(),
                         ],
                       ),
@@ -339,6 +341,67 @@ class _WaterReminderTile extends ConsumerWidget {
                         onChanged: (v) => ref
                             .read(settingsRepositoryProvider)
                             .setWaterReminder(enabled, v.round()),
+                      ),
+                    ),
+                    Text('$minutes min'),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 8),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _StretchReminderTile extends ConsumerWidget {
+  const _StretchReminderTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stretchAsync = ref.watch(stretchReminderProvider);
+    return stretchAsync.when(
+      loading: () => const SwitchListTile(
+        secondary: HugeIcon(icon: HugeIcons.strokeRoundedYoga01),
+        title: Text('Stretch reminder'),
+        subtitle: Text('Loading...'),
+        value: false,
+        onChanged: null,
+      ),
+      error: (e, _) => ListTile(title: Text('$e')),
+      data: (stretch) {
+        final (enabled: enabled, minutes: minutes) = stretch;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SwitchListTile(
+              secondary: const HugeIcon(icon: HugeIcons.strokeRoundedYoga01),
+              title: const Text('Stretch reminder'),
+              subtitle: const Text(
+                'Stand up and move for 30 seconds during every session',
+              ),
+              value: enabled,
+              onChanged: (v) => ref
+                  .read(settingsRepositoryProvider)
+                  .setStretchReminder(v, minutes),
+            ),
+            if (enabled)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    const Text('Every'),
+                    Expanded(
+                      child: Slider(
+                        value: minutes.toDouble(),
+                        min: 15,
+                        max: 45,
+                        divisions: 6,
+                        label: '$minutes min',
+                        onChanged: (v) => ref
+                            .read(settingsRepositoryProvider)
+                            .setStretchReminder(enabled, v.round()),
                       ),
                     ),
                     Text('$minutes min'),
