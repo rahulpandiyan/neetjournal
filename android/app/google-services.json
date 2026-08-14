@@ -12,7 +12,28 @@
           "package_name": "com.neerjournal.studyn"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "951622306229-0pa53u6potuckahc90md5m5tdic8v37m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.neerjournal.studyn",
+            "certificate_hash": "2f9a9d09abb8b6bd6e80f8fd9b77777162e7da5b"
+          }
+        },
+        {
+          "client_id": "951622306229-nkqgn8n7ropv67ruf39880tl9igdemmo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.neerjournal.studyn",
+            "certificate_hash": "3450fcb1f155cda195134c2c105aa3d742a6124c"
+          }
+        },
+        {
+          "client_id": "951622306229-j0k12n48lt4prl8pp44gfmun105nmiij.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD5VgCxw7UknAsHHfK5JOMT0ntRmC3jc0U"
@@ -20,7 +41,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "951622306229-j0k12n48lt4prl8pp44gfmun105nmiij.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "951622306229-cne32k29tl9jk0330219gj90l0h4od29.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.neerjournal.studyn"
+              }
+            }
+          ]
         }
       }
     }
