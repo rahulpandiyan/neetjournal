@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:heroicons/heroicons.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../state/focus_controller.dart';
 import '../../state/providers.dart';
@@ -20,6 +22,40 @@ class FocusScreen extends ConsumerStatefulWidget {
 
 class _FocusScreenState extends ConsumerState<FocusScreen> {
   bool _sheetOpen = false;
+  bool _dialogOpen = false;
+
+  /// Key of the water reminder already shown (cycle index or 'final'), so the
+  /// dialog fires once per interval instead of every rebuild.
+  String? _lastWaterKey;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _syncWakelock(ref.read(focusControllerProvider).phase);
+    });
+  }
+
+  void _syncWakelock(FocusPhase phase) {
+    final active =
+        phase == FocusPhase.focusing ||
+        phase == FocusPhase.paused ||
+        phase == FocusPhase.breaking ||
+        phase == FocusPhase.breakPaused;
+    unawaited(_applyWakelock(active));
+  }
+
+  Future<void> _applyWakelock(bool on) async {
+    try {
+      if (on) {
+        await WakelockPlus.enable();
+      } else {
+        await WakelockPlus.disable();
+      }
+    } catch (_) {
+      // Platforms without a wakelock implementation are a no-op.
+    }
+  }
 
   String _fmt(Duration d) {
     if (d.isNegative) d = Duration.zero;
@@ -225,6 +261,10 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(focusControllerProvider);
+    ref.listen<FocusState>(
+      focusControllerProvider,
+      (_, next) => _syncWakelock(next.phase),
+    );
 
     // Session ended early (END / "I'm tired" → End Session).
     if (state.phase == FocusPhase.finished) {
@@ -239,13 +279,13 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     final remaining = state.remaining();
     final timerText = _fmt(remaining);
 
-    // Drink-water reminder: shows for ~12s at each interval boundary and once
+    // Drink-water reminder: shows a dialog at each interval boundary and once
     // more in the final 90s of the session, so short sessions never miss it.
     final water =
         ref.watch(waterReminderProvider).valueOrNull ??
         (enabled: true, minutes: 30);
     final (enabled: waterEnabled, minutes: waterMinutes) = water;
-    var showWater = false;
+    String? waterKey;
     if (phase == FocusPhase.focusing && waterEnabled) {
       final active = state.focusDuration - remaining;
       final cycle = waterMinutes * 60;
@@ -255,7 +295,21 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
           remaining.inSeconds > 0 &&
           remaining.inSeconds <= 90 &&
           (active.inSeconds < cycle || active.inSeconds % cycle > cycle - 90);
-      showWater = atBoundary || finalStretch;
+      if (atBoundary) {
+        waterKey = 'cycle-${active.inSeconds ~/ cycle}';
+      } else if (finalStretch) {
+        waterKey = 'final';
+      }
+    }
+    if (waterKey != null && waterKey != _lastWaterKey) {
+      final key = waterKey;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _lastWaterKey = key;
+        _showWaterDialog();
+      });
+    } else if (phase != FocusPhase.focusing) {
+      _lastWaterKey = null;
     }
 
     return Scaffold(
@@ -298,50 +352,79 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                 ),
               ),
             ),
-            if (showWater)
-              Positioned(
-                top: 16,
-                left: 0,
-                right: 0,
-                child: IgnorePointer(
-                  child: Align(
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 24),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0x1AFFFFFF),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: const Color(0x3381D4FA)),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          HugeIcon(
-                            icon: HugeIcons.strokeRoundedDroplet,
-                            color: Color(0xFF81D4FA),
-                            size: 18,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Time for water. Stay hydrated!',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _showWaterDialog() async {
+    if (_dialogOpen || _sheetOpen) return;
+    _dialogOpen = true;
+    try {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: true,
+        builder: (ctx) => Dialog(
+          backgroundColor: FocusPalette.panel,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: const BoxDecoration(
+                    color: FocusPalette.greenSoft,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const HugeIcon(
+                    icon: HugeIcons.strokeRoundedDroplet,
+                    color: Color(0xFF81D4FA),
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Time for water',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: FocusPalette.text,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'You are in a focus flow. Sip a glass of water, stay hydrated.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: FocusPalette.textSoft,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: FocusPalette.leaf,
+                    foregroundColor: FocusPalette.ink,
+                  ),
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Got it'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    } finally {
+      _dialogOpen = false;
+    }
   }
 
   Widget _buildBody(

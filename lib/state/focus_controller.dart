@@ -26,6 +26,7 @@ class FocusState {
     this.startedAt,
     this.endTime,
     this.pausedRemaining,
+    this.resumeFocusRemaining,
   });
 
   final FocusPhase phase;
@@ -43,6 +44,11 @@ class FocusState {
   /// that `remaining()` does not keep draining against the wall clock while
   /// the timer is paused.
   final Duration? pausedRemaining;
+
+  /// Remaining focus time captured when a mid-session break starts ("I'm
+  /// tired"). When the break ends or is skipped, the interrupted focus session
+  /// resumes with this much time left instead of restarting from zero.
+  final Duration? resumeFocusRemaining;
 
   /// Remaining time in the current phase (computed for display).
   Duration remaining([DateTime? now]) {
@@ -68,8 +74,10 @@ class FocusState {
     DateTime? startedAt,
     DateTime? endTime,
     Duration? pausedRemaining,
+    Duration? resumeFocusRemaining,
     bool clearEndTime = false,
     bool clearPausedRemaining = false,
+    bool clearResumeFocusRemaining = false,
   }) {
     return FocusState(
       phase: phase ?? this.phase,
@@ -85,6 +93,9 @@ class FocusState {
       pausedRemaining: clearPausedRemaining
           ? null
           : (pausedRemaining ?? this.pausedRemaining),
+      resumeFocusRemaining: clearResumeFocusRemaining
+          ? null
+          : (resumeFocusRemaining ?? this.resumeFocusRemaining),
     );
   }
 }
@@ -116,13 +127,26 @@ class FocusController extends Notifier<FocusState> {
         state.phase == FocusPhase.breaking) {
       final remaining = state.endTime!.difference(now);
       if (remaining <= Duration.zero) {
-        _stopTicker();
         if (state.phase == FocusPhase.focusing) {
+          _stopTicker();
           this.state = state.copyWith(
             phase: FocusPhase.sessionComplete,
             clearEndTime: true,
           );
+          return;
+        }
+        // A break hit zero. If it interrupted a focus session ("I'm tired"),
+        // resume that session with its remaining time instead of going to the
+        // next-session prompt.
+        final resume = state.resumeFocusRemaining;
+        if (resume != null && resume > Duration.zero) {
+          this.state = state.copyWith(
+            phase: FocusPhase.focusing,
+            endTime: now.add(resume),
+            clearResumeFocusRemaining: true,
+          );
         } else {
+          _stopTicker();
           this.state = state.copyWith(
             phase: FocusPhase.breakComplete,
             clearEndTime: true,
@@ -162,6 +186,7 @@ class FocusController extends Notifier<FocusState> {
         Duration(minutes: focusMinutes ?? state.focusDuration.inMinutes),
       ),
       clearPausedRemaining: true,
+      clearResumeFocusRemaining: true,
     );
     _ensureTicker();
   }
@@ -198,6 +223,7 @@ class FocusController extends Notifier<FocusState> {
       phase: FocusPhase.sessionComplete,
       clearEndTime: true,
       clearPausedRemaining: true,
+      clearResumeFocusRemaining: true,
     );
   }
 
@@ -211,6 +237,7 @@ class FocusController extends Notifier<FocusState> {
       phase: FocusPhase.breaking,
       endTime: DateTime.now().add(s.breakDuration),
       clearPausedRemaining: true,
+      clearResumeFocusRemaining: true,
     );
     _ensureTicker();
   }
@@ -237,12 +264,29 @@ class FocusController extends Notifier<FocusState> {
     _ensureTicker();
   }
 
+  /// Skip the rest of the break.
+  ///
+  /// If the break interrupted a focus session ("I'm tired"), the session
+  /// resumes with its remaining time. If it followed a completed session, the
+  /// flow lands on the next-session prompt instead of silently starting a
+  /// fresh session.
   void skipBreak() {
     final s = state;
     if (s.phase != FocusPhase.breaking && s.phase != FocusPhase.breakPaused) {
       return;
     }
     _stopTicker();
+    final resume = s.resumeFocusRemaining;
+    if (resume != null && resume > Duration.zero) {
+      state = s.copyWith(
+        phase: FocusPhase.focusing,
+        endTime: DateTime.now().add(resume),
+        clearPausedRemaining: true,
+        clearResumeFocusRemaining: true,
+      );
+      _ensureTicker();
+      return;
+    }
     state = s.copyWith(
       phase: FocusPhase.breakComplete,
       clearEndTime: true,
@@ -250,7 +294,8 @@ class FocusController extends Notifier<FocusState> {
     );
   }
 
-  /// "I'm tired" → start a break of [minutes] right away.
+  /// "I'm tired" → start a break of [minutes] right away, remembering how much
+  /// focus time was left so the session can resume afterwards.
   void tiredBreak(int minutes) {
     final s = state;
     if (s.phase != FocusPhase.focusing && s.phase != FocusPhase.paused) return;
@@ -259,6 +304,7 @@ class FocusController extends Notifier<FocusState> {
       phase: FocusPhase.breaking,
       breakDuration: Duration(minutes: minutes),
       endTime: DateTime.now().add(Duration(minutes: minutes)),
+      resumeFocusRemaining: s.remaining(),
       clearPausedRemaining: true,
     );
     _ensureTicker();
@@ -277,6 +323,7 @@ class FocusController extends Notifier<FocusState> {
       phase: FocusPhase.finished,
       clearEndTime: true,
       clearPausedRemaining: true,
+      clearResumeFocusRemaining: true,
     );
   }
 

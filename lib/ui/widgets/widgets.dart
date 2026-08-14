@@ -247,7 +247,9 @@ class SoftCard extends StatelessWidget {
       clipBehavior: clipBehavior,
       child: padding == null ? child : Padding(padding: padding!, child: child),
     );
-    if (!neumorphic && border == null) return Container(margin: margin, child: surface);
+    if (!neumorphic && border == null) {
+      return Container(margin: margin, child: surface);
+    }
     return Container(
       margin: margin,
       decoration: BoxDecoration(

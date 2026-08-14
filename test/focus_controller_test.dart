@@ -44,7 +44,7 @@ void main() {
     expect(phase(), FocusPhase.sessionComplete);
   });
 
-  test('break flow: start -> skip -> breakComplete -> nextSession resets', () {
+  test('skipping a post-completion break lands on the next-session prompt', () {
     controller.startFocus(
       subjectName: 'Physics',
       title: 'x',
@@ -56,8 +56,61 @@ void main() {
     expect(phase(), FocusPhase.breaking);
     controller.skipBreak();
     expect(phase(), FocusPhase.breakComplete);
-    controller.nextSession();
-    expect(phase(), FocusPhase.idle);
+  });
+
+  test('skipBreak from a paused post-completion break also ends the break', () {
+    controller.startFocus(
+      subjectName: 'Physics',
+      title: 'x',
+      focusMinutes: 50,
+      breakMinutes: 10,
+    );
+    controller.finish();
+    controller.startBreak();
+    controller.pauseBreak();
+    expect(phase(), FocusPhase.breakPaused);
+    controller.skipBreak();
+    expect(phase(), FocusPhase.breakComplete);
+  });
+
+  test(
+    'I am tired: skip break resumes the interrupted session with remaining time',
+    () {
+      controller.startFocus(
+        subjectName: 'Physics',
+        title: 'x',
+        focusMinutes: 50,
+        breakMinutes: 10,
+      );
+      controller.tiredBreak(10);
+      expect(phase(), FocusPhase.breaking);
+      controller.skipBreak();
+      expect(phase(), FocusPhase.focusing);
+      expect(st().subjectName, 'Physics');
+      expect(st().title, 'x');
+      expect(
+        st().remaining().inSeconds,
+        closeTo(const Duration(minutes: 50).inSeconds, 2),
+      );
+    },
+  );
+
+  test('I am tired: skipBreak from a paused break resumes the session too', () {
+    controller.startFocus(
+      subjectName: 'Chemistry',
+      title: 'y',
+      focusMinutes: 25,
+      breakMinutes: 5,
+    );
+    controller.tiredBreak(10);
+    controller.pauseBreak();
+    expect(phase(), FocusPhase.breakPaused);
+    controller.skipBreak();
+    expect(phase(), FocusPhase.focusing);
+    expect(
+      st().remaining().inSeconds,
+      closeTo(const Duration(minutes: 25).inSeconds, 2),
+    );
   });
 
   test('pause and resume preserve focus phase', () {

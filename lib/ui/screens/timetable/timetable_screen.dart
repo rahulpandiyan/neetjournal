@@ -264,34 +264,31 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
                     ),
                     if (_editMode) ...[
                       const SizedBox(height: 12),
-                      Reveal(
-                        child: SoftCard(
-                          margin: EdgeInsets.zero,
-                          color: _editToday
-                              ? theme.colorScheme.tertiaryContainer
-                              : theme.colorScheme.secondaryContainer,
-                          neumorphic: false,
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Row(
-                              children: [
-                                HugeIcon(
-                                  icon: _editToday
-                                      ? HugeIcons.strokeRoundedCalendar01
-                                      : HugeIcons
-                                            .strokeRoundedCalendarSetting01,
-                                  size: 20,
+                      SoftCard(
+                        margin: EdgeInsets.zero,
+                        color: _editToday
+                            ? theme.colorScheme.tertiaryContainer
+                            : theme.colorScheme.secondaryContainer,
+                        neumorphic: false,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              HugeIcon(
+                                icon: _editToday
+                                    ? HugeIcons.strokeRoundedCalendar01
+                                    : HugeIcons.strokeRoundedCalendarSetting01,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  _editToday
+                                      ? 'Editing only today. The weekly schedule is untouched.'
+                                      : 'Editing the weekly schedule for ${_dayNames[_day - 1]}. Tap a session to change it.',
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    _editToday
-                                        ? 'Editing only today. The weekly schedule is untouched.'
-                                        : 'Editing the weekly schedule for ${_dayNames[_day - 1]}. Tap a session to change it.',
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -311,13 +308,10 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
                     else ...[
                       const SizedBox(height: 12),
                       for (var i = 0; i < slots.length; i++)
-                        Reveal(
-                          delay: Duration(milliseconds: i * 40),
-                          child: _SlotTile(
-                            slot: slots[i],
-                            editing: _editMode,
-                            onTap: _editMode ? () => _editSlot(slots[i]) : null,
-                          ),
+                        _SlotTile(
+                          slot: slots[i],
+                          editing: _editMode,
+                          onTap: _editMode ? () => _editSlot(slots[i]) : null,
                         ),
                       if (_editMode) ...[
                         const SizedBox(height: 4),

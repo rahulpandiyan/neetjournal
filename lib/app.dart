@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'state/providers.dart';
+import 'state/reminder_controller.dart';
 import 'theme/app_theme.dart';
 import 'ui/splash_screen.dart';
 
@@ -43,7 +44,41 @@ class _NeetJournalAppState extends ConsumerState<NeetJournalApp> {
       color: AppTheme.light().colorScheme.surface,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      home: const SplashScreen(),
+      home: _ForegroundReminderListener(child: const SplashScreen()),
     );
+  }
+}
+
+/// Shows an in-app dialog when the foreground reminder watcher fires (rest
+/// reminders at study-slot end) so the prompt appears inside the app while the
+/// OS notification still covers the background case.
+class _ForegroundReminderListener extends ConsumerWidget {
+  const _ForegroundReminderListener({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen<ForegroundReminder?>(foregroundReminderProvider, (_, next) {
+      if (next == null) return;
+      final reminder = next;
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Time to rest'),
+          content: Text(reminder.body),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                ref.read(foregroundReminderProvider.notifier).dismissed();
+              },
+              child: const Text('Got it'),
+            ),
+          ],
+        ),
+      );
+    });
+    return child;
   }
 }
