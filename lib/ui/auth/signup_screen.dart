@@ -81,12 +81,22 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       await ref.read(authServiceProvider).signInWithGoogle();
     } on FirebaseAuthException catch (e) {
       if (e.code != 'aborted-by-user') {
-        _showError(e.message ?? 'Google sign-in failed.');
+        String msg = e.message ?? 'Google sign-in failed.';
+        // Desktop-specific guidance
+        if (msg.contains('oauth') || msg.contains('OAuth') ||
+            msg.contains('client') || kIsWeb == false &&
+                (defaultTargetPlatform == TargetPlatform.linux ||
+                 defaultTargetPlatform == TargetPlatform.windows)) {
+          msg = 'Google Sign-In requires OAuth setup for desktop. '
+              'Go to Firebase Console → Project Settings → Your apps → '
+              'Add Desktop OAuth client, then rebuild.';
+        }
+        _showError(msg);
       }
     } catch (_) {
       _showError(
-        'Google sign-in failed. On desktop it needs an OAuth client in the '
-        'Firebase console.',
+        'Google sign-in failed. On desktop it needs an OAuth client configured '
+        'in Firebase Console (Project Settings → OAuth client).',
       );
     } finally {
       if (mounted) setState(() => _loading = false);
