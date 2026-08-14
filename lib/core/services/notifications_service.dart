@@ -192,6 +192,11 @@ class NotificationsService {
         requestSoundPermission: false,
       ),
       linux: LinuxInitializationSettings(defaultActionName: 'Open Studyn'),
+      windows: WindowsInitializationSettings(
+        appName: 'Studyn',
+        appUserModelId: 'RahulPandiyan.Studyn',
+        guid: '98b61031-e101-4d86-8141-6f2861811a82',
+      ),
     );
     // Initialize the plugin first so show()/zonedSchedule() always work, even
     // if the platform timezone lookup below misbehaves.
