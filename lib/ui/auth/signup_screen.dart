@@ -32,18 +32,18 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      final user = await ref
-          .read(authServiceProvider)
-          .signUpWithEmail(_email.text.trim(), _password.text);
+      final user = await ref.read(authServiceProvider).signUpWithEmail(
+            _email.text.trim(),
+            _password.text,
+          );
       if (_name.text.trim().isNotEmpty) {
         await user.user?.updateDisplayName(_name.text.trim());
       }
+      // Sign-up successful — navigation handled by auth state listener.
     } on FirebaseAuthException catch (e) {
-      _showError(
-        e.code == 'email-already-in-use'
-            ? 'That email is already registered. Try signing in.'
-            : e.message ?? 'Sign up failed.',
-      );
+      _showError(e.code == 'email-already-in-use'
+          ? 'That email is already registered. Try signing in.'
+          : e.message ?? 'Sign up failed.');
     } catch (_) {
       _showError('Sign up failed. Check your connection and try again.');
     } finally {
@@ -51,35 +51,19 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     }
   }
 
-  Future<void> _google() async {
-    setState(() => _loading = true);
-    try {
-      await ref.read(authServiceProvider).signInWithGoogle();
-    } on FirebaseAuthException catch (e) {
-      if (e.code != 'aborted-by-user') {
-        _showError(e.message ?? 'Google sign-in failed.');
-      }
-    } catch (_) {
-      _showError('Google sign-in failed. Please try again.');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return AuthScaffold(
-      title: 'Create your account',
-      subtitle:
-          'Your timetable, sessions and notes sync here — safe and yours.',
+      title: 'Create account',
+      subtitle: 'Sign up with email to keep your data safe.',
       children: [
         Form(
           key: _formKey,
@@ -138,54 +122,30 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       )
                     : const Text('Create account'),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Expanded(child: Divider()),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: Text(
-                      'or',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                  Text(
+                    'Already have an account?',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  const Expanded(child: Divider()),
+                  TextButton(
+                    onPressed: _loading
+                        ? null
+                        : () => Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (_) => const LoginScreen(),
+                              ),
+                            ),
+                    child: const Text('Sign in'),
+                  ),
                 ],
-              ),
-              const SizedBox(height: 16),
-              OutlinedButton.icon(
-                onPressed: _loading ? null : _google,
-                icon: const GoogleG(size: 20),
-                label: const Text('Sign up with Google'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(52),
-                  backgroundColor: theme.colorScheme.surface,
-                ),
               ),
             ],
           ),
-        ),
-        const SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Already have an account?',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            TextButton(
-              onPressed: _loading
-                  ? null
-                  : () => Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const LoginScreen()),
-                    ),
-              child: const Text('Sign in'),
-            ),
-          ],
         ),
       ],
     );

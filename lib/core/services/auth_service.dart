@@ -13,8 +13,48 @@ class AuthService {
 
   User? get currentUser => _auth.currentUser;
 
-  Future<UserCredential> signInWithEmail(String email, String password) {
-    return _auth.signInWithEmailAndPassword(email: email, password: password);
+  /// Sends an OTP to [phoneNumber] (e.g. "+919876543210").
+  /// On Android/iOS the OS may auto-verify and call [autoVerify].
+  Future<void> sendPhoneOTP({
+    required String phoneNumber,
+    void Function(PhoneAuthCredential)? autoVerify,
+  }) async {
+    await _auth.verifyPhoneNumber(
+      phoneNumber: phoneNumber,
+      verificationCompleted: (PhoneAuthCredential credential) {
+        // Auto-verified on Android/iOS — sign in immediately.
+        autoVerify?.call(credential);
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        throw e;
+      },
+      codeSent: (String verificationId, int? resendToken) {
+        // Update the verification ID so the UI can use it.
+        _currentVerificationId = verificationId;
+      },
+      codeAutoRetrievalTimeout: (String verificationId) {
+        _currentVerificationId = verificationId;
+      },
+    );
+  }
+
+  String? _currentVerificationId;
+
+  String? get currentVerificationId => _currentVerificationId;
+
+  /// Verifies [smsCode] against the most recently received verification ID.
+  Future<UserCredential> verifyPhoneOTP(String smsCode) async {
+    if (_currentVerificationId == null) {
+      throw FirebaseAuthException(
+        code: 'no-verification-id',
+        message: 'No verification ID available. Please request a new OTP.',
+      );
+    }
+    final credential = PhoneAuthProvider.credential(
+      verificationId: _currentVerificationId!,
+      smsCode: smsCode,
+    );
+    return _auth.signInWithCredential(credential);
   }
 
   Future<UserCredential> signUpWithEmail(String email, String password) {
