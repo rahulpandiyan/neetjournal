@@ -110,7 +110,7 @@ class GoogleG extends StatelessWidget {
       'assets/svg/google_logo.svg',
       width: size,
       height: size,
-      color: const Color(0xFF4285F4),
+      color: const Color(0xFF000000),
     );
   }
 }
