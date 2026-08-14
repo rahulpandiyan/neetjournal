@@ -34,62 +34,67 @@ class AuthScaffold extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(28, 32, 28, 32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 84,
-                        height: 84,
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: theme.scaffoldBackgroundColor,
-                          borderRadius: BorderRadius.circular(26),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.10),
-                              blurRadius: 24,
-                              offset: const Offset(0, 12),
-                            ),
-                          ],
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Spacer(flex: 2),
+                // Logo
+                Center(
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: scheme.surface,
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: scheme.shadow.withValues(alpha: 0.12),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(18),
-                          child: Image.asset(
-                            'assets/images/app_logo.png',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset(
+                        'assets/images/app_logo.png',
+                        fit: BoxFit.cover,
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    Text(
-                      title,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.headlineLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.7,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      subtitle,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-                    ...children,
-                  ],
+                  ),
                 ),
-              ),
+                const SizedBox(height: 28),
+                // Title
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.7,
+                    color: scheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // Subtitle
+                Text(
+                  subtitle,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 36),
+                // Button
+                ...children,
+                const SizedBox(height: 24),
+                // Footer text
+                const Spacer(),
+              ],
             ),
           ),
         ),
@@ -98,7 +103,7 @@ class AuthScaffold extends StatelessWidget {
   }
 }
 
-/// The Google "G" icon from the SVG drawable.
+/// The Google "G" icon with original Google colors.
 class GoogleG extends StatelessWidget {
   const GoogleG({super.key, this.size = 22});
 
@@ -110,13 +115,12 @@ class GoogleG extends StatelessWidget {
       'assets/svg/google_logo.svg',
       width: size,
       height: size,
-      color: const Color(0xFF4285F4),
     );
   }
 }
 
-/// Modern bento-style Google sign-in button with skeletonism design.
-/// Clean card, soft shadows, and sleek typography.
+/// Modern frosted green Google sign-in button with sleek design.
+/// Uses project's primary green (#2E7D32) with subtle shadows.
 class GoogleSignInButton extends StatelessWidget {
   const GoogleSignInButton({
     super.key,
@@ -135,33 +139,36 @@ class GoogleSignInButton extends StatelessWidget {
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
+    // Frosted green colors
+    final primaryColor = isDark ? const Color(0xFF83CE86) : const Color(0xFF2E7D32);
+    final primaryLight = isDark ? const Color(0xFF205E25) : const Color(0xFFA5D6A7);
+
     return GestureDetector(
       onTap: loading ? null : onPressed,
       child: Container(
-        height: 56,
+        height: 58,
         decoration: BoxDecoration(
-          color: isDark
-              ? const Color(0xFF2A2D27)
-              : const Color(0xFFFDFDFD),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isDark
-                ? const Color(0xFF3D4237).withValues(alpha: 0.8)
-                : const Color(0xFFE8EBE6),
-            width: 1,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              primaryColor,
+              primaryLight,
+            ],
           ),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
-            // Soft inner highlight
+            // Primary shadow
             BoxShadow(
-              color: Colors.white.withValues(alpha: isDark ? 0.02 : 0.9),
+              color: primaryColor.withValues(alpha: 0.3),
+              offset: const Offset(0, 4),
+              blurRadius: 16,
+            ),
+            // Subtle inner highlight
+            BoxShadow(
+              color: Colors.white.withValues(alpha: 0.15),
               offset: const Offset(-2, -2),
               blurRadius: 8,
-            ),
-            // Soft outer shadow
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
-              offset: const Offset(2, 4),
-              blurRadius: 16,
             ),
           ],
         ),
@@ -169,12 +176,12 @@ class GoogleSignInButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (loading)
-              const SizedBox(
+              SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Color(0xFF4285F4),
+                  color: Colors.white,
                 ),
               )
             else
@@ -186,8 +193,8 @@ class GoogleSignInButton extends StatelessWidget {
                 fontFamily: 'DMSans',
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white : const Color(0xFF1F2937),
-                letterSpacing: 0.1,
+                color: Colors.white,
+                letterSpacing: 0.2,
               ),
             ),
           ],
