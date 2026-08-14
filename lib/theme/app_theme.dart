@@ -231,13 +231,14 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: scheme.inverseSurface,
+        backgroundColor: const Color(0xFF2E7D32),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         insetPadding: const EdgeInsets.all(16),
         contentTextStyle: const TextStyle(
           fontFamily: 'DMSans',
           fontSize: 14,
           fontWeight: FontWeight.w500,
+          color: Colors.white,
         ),
       ),
       appBarTheme: AppBarThemeData(

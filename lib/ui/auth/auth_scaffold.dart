@@ -106,14 +106,15 @@ class GoogleG extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Use black for light mode (white button), white for dark mode
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final greenColor = isDark ? const Color(0xFF83CE86) : const Color(0xFF2E7D32);
+    final iconColor = isDark ? Colors.white : const Color(0xFF1F2937);
 
     return SvgPicture.asset(
       'assets/svg/google_logo.svg',
       width: size,
       height: size,
-      color: greenColor,
+      color: iconColor,
     );
   }
 }
