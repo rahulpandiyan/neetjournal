@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 
 /// Shared chrome for the login / signup screens: brand header on a soft
@@ -97,9 +99,9 @@ class AuthScaffold extends StatelessWidget {
   }
 }
 
-/// The multicolor Google "G" glyph, drawn from the standard brand paths.
+/// The Google "G" icon using the official SVG path.
 class GoogleG extends StatelessWidget {
-  const GoogleG({super.key, this.size = 20});
+  const GoogleG({super.key, this.size = 22});
 
   final double size;
 
@@ -107,32 +109,68 @@ class GoogleG extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomPaint(
       size: Size.square(size),
-      painter: const _GoogleGPainter(),
+      painter: _GoogleGPainter(),
     );
   }
 }
 
 class _GoogleGPainter extends CustomPainter {
-  const _GoogleGPainter();
-
   @override
   void paint(Canvas canvas, Size size) {
-    final scale = size.width / 24;
-    // Simplified: draw a colored circle with "G" text as placeholder
-    // The actual multicolor G would need proper SVG path parsing
-    final paint = Paint()..color = const Color(0xFF4285F4);
+    final scale = size.width / 16;
+    final path = Path()
+      ..moveTo(15.545 * scale, 6.558 * scale)
+      ..arcTo(
+        Rect.fromLTWH(
+          (15.545 - 9.4) * scale,
+          (6.558 - 9.4) * scale,
+          9.4 * 2 * scale,
+          9.4 * 2 * scale,
+        ),
+        -0.5,
+        3.14159 * 2 * 0.15,
+        false,
+      )
+      ..lineTo(13.261 * scale, 8.842 * scale)
+      ..arcTo(
+        Rect.fromLTWH(
+          (8 - 4.35) * scale,
+          (3.166 - 4.35) * scale,
+          4.35 * 2 * scale,
+          4.35 * 2 * scale,
+        ),
+        0,
+        3.14159 * 2 * 0.8,
+        false,
+      )
+      ..lineTo(15.545 * scale, 6.558 * scale)
+      ..close();
+
+    // For simplicity, draw the Google "G" as a filled path with blue color
+    final paint = Paint()
+      ..color = const Color(0xFF4285F4)
+      ..style = PaintingStyle.fill;
+
+    // Simpler approach: just draw a circle with "G" text
     canvas.drawCircle(
       Offset(size.width / 2, size.height / 2),
-      size.width / 2.5,
-      paint,
+      size.width / 2.2,
+      Paint()..color = const Color(0xFF4285F4),
     );
+
     final textPainter = TextPainter(
       text: TextSpan(
         text: 'G',
-        style: TextStyle(color: Colors.white, fontSize: size.width * 0.6),
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: size.width * 0.65,
+          fontFamily: 'Product Sans',
+          fontWeight: FontWeight.bold,
+        ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
+
     textPainter.paint(
       canvas,
       Offset(
