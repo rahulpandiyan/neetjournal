@@ -1,6 +1,11 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+
+import 'desktop_google_auth.dart';
+import 'google_credentials.dart';
 
 /// Thin wrapper around [FirebaseAuth] so the UI talks to a stable surface and
 /// platform quirks (Google sign-in on desktop) stay contained.
@@ -97,25 +102,93 @@ class AuthService {
     );
   }
 
-  Future<UserCredential> signInWithGoogle() async {
-    final google = GoogleSignIn.instance;
+  bool _googleInitialized = false;
 
-    // Desktop (Windows/Linux) needs an interactive sign-in that opens the
-    // browser; the `google_sign_in_*` desktop federations do this for us.
+  /// Resolves the desktop OAuth client secret from `--dart-define` or the
+  /// local (git-ignored) `~/.studyn/google_secret` file. Returns null when it
+  /// is not configured, so sign-in can fail with a helpful message.
+  String? _googleClientSecret() {
+    if (googleDesktopClientSecret.isNotEmpty) {
+      return googleDesktopClientSecret;
+    }
     try {
-      final account = await google.authenticate();
-      final authentication = account.authentication;
+      final home = Platform.environment['HOME'];
+      if (home != null) {
+        final file = File('$home/.studyn/google_secret');
+        if (file.existsSync()) {
+          final value = file.readAsStringSync().trim();
+          if (value.isNotEmpty) return value;
+        }
+      }
+    } catch (_) {
+      // Fall through to the missing-configuration error below.
+    }
+    return null;
+  }
+
+  Future<UserCredential> signInWithGoogle() async {
+    // Desktop (Linux/Windows) has no google_sign_in platform implementation, so
+    // use the browser-based OAuth authorization-code flow instead.
+    if (!kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.linux ||
+            defaultTargetPlatform == TargetPlatform.windows)) {
+      final secret = _googleClientSecret();
+      if (secret == null) {
+        throw FirebaseAuthException(
+          code: 'google-client-secret-missing',
+          message: 'Desktop Google sign-in is not configured. Provide the '
+              'OAuth client secret via --dart-define=GOOGLE_CLIENT_SECRET=... '
+              'or the ~/.studyn/google_secret file.',
+        );
+      }
+      final auth = DesktopGoogleAuth(
+        clientId: googleDesktopClientId,
+        clientSecret: secret,
+      );
+      final tokens = await auth.signIn();
       final credential = GoogleAuthProvider.credential(
-        idToken: authentication.idToken,
+        idToken: tokens.idToken,
+        accessToken: tokens.accessToken,
       );
       return _auth.signInWithCredential(credential);
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'aborted-by-user') rethrow;
+    }
+
+    // Android/iOS/macOS/web go through google_sign_in. `initialize()` must
+    // complete before anything else; on Android it reads the web client ID
+    // from google-services.json so an ID token is actually requested.
+    final google = GoogleSignIn.instance;
+    if (!_googleInitialized) {
+      await google.initialize();
+      _googleInitialized = true;
+    }
+
+    try {
+      final account = await google.authenticate();
+      final idToken = account.authentication.idToken;
+      if (idToken == null) {
+        throw FirebaseAuthException(
+          code: 'google-id-token-missing',
+          message: 'Google did not return an ID token. Check the Firebase '
+              'OAuth client (SHA-1) configuration.',
+        );
+      }
+      final credential = GoogleAuthProvider.credential(idToken: idToken);
+      return _auth.signInWithCredential(credential);
+    } on FirebaseAuthException {
       rethrow;
-    } catch (_) {
+    } on GoogleSignInException catch (e) {
+      // v7 reports cancellation and UI issues as GoogleSignInException.
+      if (e.code == GoogleSignInExceptionCode.canceled ||
+          e.code == GoogleSignInExceptionCode.interrupted ||
+          e.code == GoogleSignInExceptionCode.uiUnavailable) {
+        throw FirebaseAuthException(
+          code: 'aborted-by-user',
+          message: 'Google sign-in was cancelled.',
+        );
+      }
       throw FirebaseAuthException(
-        code: 'aborted-by-user',
-        message: 'Google sign-in was cancelled.',
+        code: 'google-sign-in-failed',
+        message: e.description ?? 'Google sign-in failed.',
       );
     }
   }

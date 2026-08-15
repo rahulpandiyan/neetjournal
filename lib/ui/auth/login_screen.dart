@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,23 +21,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref.read(authServiceProvider).signInWithGoogle();
     } on FirebaseAuthException catch (e) {
       if (e.code != 'aborted-by-user') {
-        String msg = e.message ?? 'Google sign-in failed.';
-        // Desktop-specific guidance
-        if (msg.contains('oauth') || msg.contains('OAuth') ||
-            msg.contains('client') ||
-            (!kIsWeb && (defaultTargetPlatform == TargetPlatform.linux ||
-                defaultTargetPlatform == TargetPlatform.windows))) {
-          msg = 'Google Sign-In requires OAuth setup for desktop. '
-              'Go to Firebase Console → Project Settings → Your apps → '
-              'Add Desktop OAuth client, then rebuild.';
-        }
-        _showError(msg);
+        _showError(e.message ?? 'Google sign-in failed.');
       }
-    } catch (_) {
-      _showError(
-        'Google sign-in failed. On desktop it needs an OAuth client configured '
-        'in Firebase Console (Project Settings → OAuth client).',
-      );
+    } catch (e) {
+      _showError('Google sign-in failed: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
