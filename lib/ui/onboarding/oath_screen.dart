@@ -1,3 +1,4 @@
+import 'dart:async' as async;
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -413,7 +414,7 @@ class _OathStep extends StatelessWidget {
         Reveal(
           delay: const Duration(milliseconds: 600),
           child: Text(
-            'HOLD THE SEAL TO TAKE THE OATH',
+            'TAP THE SEAL TO TAKE THE OATH',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'DMSans',
@@ -711,8 +712,9 @@ class _BentoCard extends StatelessWidget {
   }
 }
 
-/// A golden seal that fills while held; completing the hold seals the oath.
-/// The fingerprint sits in the disc — your print on the promise.
+/// A golden seal that fills over 1.2 s after a tap; completing the fill
+/// seals the oath. Uses a timer instead of hold-gesture callbacks to avoid
+/// triggering the Linux desktop mouse-tracker recursive-update assertion.
 class _OathSealButton extends StatefulWidget {
   const _OathSealButton({required this.onSealed});
 
@@ -724,31 +726,30 @@ class _OathSealButton extends StatefulWidget {
 
 class _OathSealButtonState extends State<_OathSealButton>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _progress =
-      AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 1200),
-      )..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          setState(() => _sealed = true);
-          // Defer the parent callback to a microtask so it runs after the
-          // current pointer-event batch has fully drained. Calling
-          // pushReplacement synchronously from the status listener (or from a
-          // post-frame callback) triggers a tree rebuild that re-enters the
-          // mouse tracker during the same frame on Linux desktop, hitting the
-          // '!_debugDuringDeviceUpdate' assertion and crashing.
-          Future.microtask(() {
-            if (mounted) widget.onSealed();
-          });
-        }
-      });
+  late final AnimationController _progress = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  );
 
   bool _sealed = false;
+  async.Timer? _timer;
 
   @override
   void dispose() {
+    _timer?.cancel();
     _progress.dispose();
     super.dispose();
+  }
+
+  void _startTimer() {
+    if (_sealed) return;
+    _timer?.cancel();
+    _progress.forward(from: 0);
+    _timer = async.Timer(const Duration(milliseconds: 1200), () {
+      if (!mounted) return;
+      setState(() => _sealed = true);
+      widget.onSealed();
+    });
   }
 
   @override
@@ -756,15 +757,10 @@ class _OathSealButtonState extends State<_OathSealButton>
     return Semantics(
       button: true,
       label: 'Take the study oath',
-      hint: 'Press and hold the seal to take the oath',
-      child: GestureDetector(
-        onTapDown: (_) => _progress.forward(),
-        onTapUp: (_) {
-          if (!_sealed) _progress.reverse();
-        },
-        onTapCancel: () {
-          if (!_sealed) _progress.reverse();
-        },
+      hint: 'Tap the seal to take the oath',
+      child: InkWell(
+        onTap: _startTimer,
+        borderRadius: BorderRadius.circular(74),
         child: AnimatedBuilder(
           animation: _progress,
           builder: (context, _) {
