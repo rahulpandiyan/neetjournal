@@ -59,9 +59,18 @@ class _OathScreenState extends ConsumerState<OathScreen> {
     if (name.isEmpty) return;
     FocusScope.of(context).unfocus();
     ref.read(settingsRepositoryProvider).setSetting('profileName', name);
-    setState(() {
-      _name = name;
-      _step = 1;
+    // Defer the step change to a microtask so the AnimatedSwitcher tree
+    // swap does not happen during the pointer-event batch. Rebuilding the
+    // oath step (which mounts the seal button's GestureDetector) mid-pointer
+    // causes the MouseTracker to recurse into _deviceUpdatePhase on Linux
+    // desktop, hitting the '!_debugDuringDeviceUpdate' assertion.
+    Future.microtask(() {
+      if (mounted) {
+        setState(() {
+          _name = name;
+          _step = 1;
+        });
+      }
     });
   }
 
@@ -70,11 +79,13 @@ class _OathScreenState extends ConsumerState<OathScreen> {
     if (_name.isNotEmpty) await repo.setSetting('profileName', _name);
     await repo.setSetting('oathTaken', '1');
     if (!mounted) return;
-    // Defer navigation until after the current pointer-event batch completes.
-    // Calling pushReplacement directly from the animation status listener can
-    // trigger a frame callback mid-pointer, which on Linux desktop causes the
-    // MouseTracker to recurse into _deviceUpdatePhase (assertion failure).
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Defer navigation to a microtask so it runs after the current
+    // pointer-event batch has fully drained. Calling pushReplacement
+    // synchronously from the animation status listener (or even from a
+    // post-frame callback) triggers a tree rebuild that re-enters the
+    // mouse tracker during the same frame on Linux desktop, hitting the
+    // '!_debugDuringDeviceUpdate' assertion and crashing the app.
+    Future.microtask(() {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
@@ -720,14 +731,13 @@ class _OathSealButtonState extends State<_OathSealButton>
       )..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
           setState(() => _sealed = true);
-          // Defer the parent callback to the post-frame phase so that any
-          // ongoing pointer-event handling (and the mouse-tracker's
-          // _deviceUpdatePhase) has fully finished. Without this, calling
-          // pushReplacement synchronously from the status listener triggers a
-          // rebuild that re-enters the mouse tracker during the same frame,
-          // which on Linux desktop hits the '!_debugDuringDeviceUpdate'
-          // assertion and crashes.
-          WidgetsBinding.instance.addPostFrameCallback((_) {
+          // Defer the parent callback to a microtask so it runs after the
+          // current pointer-event batch has fully drained. Calling
+          // pushReplacement synchronously from the status listener (or from a
+          // post-frame callback) triggers a tree rebuild that re-enters the
+          // mouse tracker during the same frame on Linux desktop, hitting the
+          // '!_debugDuringDeviceUpdate' assertion and crashing.
+          Future.microtask(() {
             if (mounted) widget.onSealed();
           });
         }
