@@ -2,6 +2,7 @@ import 'dart:async' as async;
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -10,12 +11,6 @@ import '../../state/providers.dart';
 import '../screens/home_shell.dart';
 import '../widgets/widgets.dart';
 
-/// Onboarding: the user commits to their NEET journey by taking "The Study
-/// Oath". Shown once after sign-in, skipped once taken. Deliberately an
-/// immersive dark screen so it reads as a moment, not a form.
-///
-/// Two steps: first we ask how to call the user ("Bro, how can we call you?"),
-/// then the oath is signed with that name.
 class OathScreen extends ConsumerStatefulWidget {
   const OathScreen({super.key});
 
@@ -32,16 +27,19 @@ class _OathScreenState extends ConsumerState<OathScreen> {
   ];
 
   final _nameController = TextEditingController();
+
   String _name = '';
   int _step = 0;
 
   @override
   void initState() {
     super.initState();
-    // Prefill with a name saved during a previous, incomplete visit.
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+
       final saved = ref.read(profileNameProvider).valueOrNull ?? '';
+
       if (saved.isNotEmpty && _nameController.text.isEmpty) {
         _nameController.text = saved;
         setState(() {});
@@ -57,87 +55,69 @@ class _OathScreenState extends ConsumerState<OathScreen> {
 
   void _continueWithName() {
     final name = _nameController.text.trim();
+
     if (name.isEmpty) return;
+
     FocusScope.of(context).unfocus();
+
     ref.read(settingsRepositoryProvider).setSetting('profileName', name);
-    // Defer the step change to a microtask so the AnimatedSwitcher tree
-    // swap does not happen during the pointer-event batch. Rebuilding the
-    // oath step (which mounts the seal button's GestureDetector) mid-pointer
-    // causes the MouseTracker to recurse into _deviceUpdatePhase on Linux
-    // desktop, hitting the '!_debugDuringDeviceUpdate' assertion.
-    Future.microtask(() {
-      if (mounted) {
-        setState(() {
-          _name = name;
-          _step = 1;
-        });
-      }
+
+    Future.delayed(const Duration(milliseconds: 80), () {
+      if (!mounted) return;
+
+      setState(() {
+        _name = name;
+        _step = 1;
+      });
     });
   }
 
   Future<void> _seal() async {
     final repo = ref.read(settingsRepositoryProvider);
-    if (_name.isNotEmpty) await repo.setSetting('profileName', _name);
+
+    if (_name.isNotEmpty) {
+      await repo.setSetting('profileName', _name);
+    }
+
     await repo.setSetting('oathTaken', '1');
+
     if (!mounted) return;
-    // Defer navigation to a microtask so it runs after the current
-    // pointer-event batch has fully drained. Calling pushReplacement
-    // synchronously from the animation status listener (or even from a
-    // post-frame callback) triggers a tree rebuild that re-enters the
-    // mouse tracker during the same frame on Linux desktop, hitting the
-    // '!_debugDuringDeviceUpdate' assertion and crashing the app.
-    Future.microtask(() {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (_, animation, secondary) => const HomeShell(),
-            transitionsBuilder: (_, animation, secondary, child) =>
-                FadeTransition(opacity: animation, child: child),
-            transitionDuration: const Duration(milliseconds: 450),
-          ),
-        );
-      }
+
+    Future.delayed(const Duration(milliseconds: 80), () {
+      if (!mounted) return;
+
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (_, animation, secondary) => const HomeShell(),
+          transitionsBuilder: (_, animation, secondary, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 450),
+        ),
+      );
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF07130B),
-      body: Stack(
-        children: [
-          // Ambient glow behind the content.
-          Positioned(
-            top: -140,
-            left: 0,
-            right: 0,
-            child: IgnorePointer(
-              child: Container(
-                height: 420,
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFF2E7D32).withValues(alpha: 0.55),
-                      Colors.transparent,
-                    ],
-                    stops: const [0, 1],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(28, 24, 28, 40),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 520),
+      backgroundColor: scheme.surface,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: Center(
+                child: SizedBox(
+                  width: double.infinity,
                   child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 420),
+                    duration: const Duration(milliseconds: 320),
                     switchInCurve: Curves.easeOut,
                     switchOutCurve: Curves.easeIn,
-                    transitionBuilder: (child, animation) =>
-                        FadeTransition(opacity: animation, child: child),
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(opacity: animation, child: child);
+                    },
                     child: _step == 0
                         ? _NameStep(
                             key: const ValueKey('name-step'),
@@ -155,14 +135,13 @@ class _OathScreenState extends ConsumerState<OathScreen> {
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-/// Step 1 — "Bro, how can we call you?"
 class _NameStep extends StatelessWidget {
   const _NameStep({
     super.key,
@@ -177,137 +156,180 @@ class _NameStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final scheme = Theme.of(context).colorScheme;
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        const SizedBox(height: 20),
         Reveal(
-          child: Center(
-            child: _FingerprintHero(
-              size: 116,
-              iconSize: 58,
-              color: const Color(0xFFA5D6A7),
-              glow: const Color(0xFF2E7D32),
+          child: Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: scheme.surfaceContainerHigh,
+              border: Border.all(color: scheme.outlineVariant, width: 1),
+            ),
+            child: Center(
+              child: SvgPicture.asset(
+                'assets/svg/fingerprint.svg',
+                colorFilter: ColorFilter.mode(scheme.primary, BlendMode.srcIn),
+                width: 36,
+                height: 36,
+              ),
             ),
           ),
         ),
-        const SizedBox(height: 22),
+
+        const SizedBox(height: 32),
+
         Reveal(
-          delay: const Duration(milliseconds: 100),
+          delay: const Duration(milliseconds: 80),
           child: Text(
             'THE STUDY OATH',
             textAlign: TextAlign.center,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: const Color(0xFFA5D6A7),
+            style: TextStyle(
+              fontFamily: 'DMSans',
+              fontSize: 12.5,
+              color: scheme.primary,
               fontWeight: FontWeight.w700,
               letterSpacing: 3,
             ),
           ),
         ),
+
         const SizedBox(height: 12),
+
         Reveal(
-          delay: const Duration(milliseconds: 180),
+          delay: const Duration(milliseconds: 150),
           child: Text(
             'Bro, how can\nwe call you?',
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'SpaceGrotesk',
-              fontSize: 42,
-              height: 1.05,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -1.3,
-              color: Color(0xFFF2F5F0),
+              fontSize: 40,
+              height: 1.08,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -1.2,
+              color: scheme.onSurface,
             ),
           ),
         ),
+
         const SizedBox(height: 12),
+
         Reveal(
-          delay: const Duration(milliseconds: 260),
+          delay: const Duration(milliseconds: 220),
           child: Text(
             'One name is enough. The oath hits different '
             'when it\'s signed with yours.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'DMSans',
-              fontSize: 14.5,
-              height: 1.5,
-              color: const Color(0xFF9CB09F),
+              fontSize: 15,
+              height: 1.6,
+              color: scheme.onSurfaceVariant,
             ),
           ),
         ),
-        const SizedBox(height: 28),
+
+        const SizedBox(height: 32),
+
         Reveal(
-          delay: const Duration(milliseconds: 340),
+          delay: const Duration(milliseconds: 300),
           child: TextField(
             controller: controller,
             autofocus: true,
             maxLength: 30,
             textCapitalization: TextCapitalization.words,
-            style: const TextStyle(
+            cursorColor: scheme.primary,
+            style: TextStyle(
               fontFamily: 'DMSans',
               fontSize: 17,
               fontWeight: FontWeight.w600,
-              color: Color(0xFFE4EAE2),
+              color: scheme.onSurface,
             ),
             decoration: InputDecoration(
               hintText: 'Your name, bro',
+              hintStyle: TextStyle(
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.4),
+                fontWeight: FontWeight.w500,
+              ),
               counterText: '',
-              prefixIcon: const HugeIcon(
+              prefixIcon: HugeIcon(
                 icon: HugeIcons.strokeRoundedUserCircle,
                 size: 22,
-                color: Color(0xFF8FA993),
+                color: scheme.onSurfaceVariant,
               ),
               filled: true,
-              fillColor: Colors.white.withValues(alpha: 0.06),
+              fillColor: scheme.surfaceContainerLow,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 20,
                 vertical: 18,
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(14),
                 borderSide: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.12),
+                  color: scheme.outlineVariant,
+                  width: 1.2,
                 ),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(14),
                 borderSide: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.12),
+                  color: scheme.outlineVariant,
+                  width: 1.2,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(18),
-                borderSide: const BorderSide(
-                  color: Color(0xFF66BB6A),
-                  width: 1.5,
-                ),
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: scheme.primary, width: 1.6),
               ),
             ),
             onChanged: (_) => onChanged(),
             onSubmitted: (_) => onContinue(),
           ),
         ),
+
         const SizedBox(height: 18),
+
         Reveal(
-          delay: const Duration(milliseconds: 420),
-          child: _RaisedButton(
-            label: 'Let\'s go',
-            icon: HugeIcons.strokeRoundedArrowRight02,
-            enabled: controller.text.trim().isNotEmpty,
-            onTap: onContinue,
+          delay: const Duration(milliseconds: 360),
+          child: FilledButton.icon(
+            onPressed: controller.text.trim().isNotEmpty ? onContinue : null,
+            icon: Icon(
+              controller.text.trim().isNotEmpty
+                  ? Icons.arrow_forward_rounded
+                  : Icons.check_circle_outline,
+            ),
+            label: Text(
+              controller.text.trim().isNotEmpty ? 'Let\'s go' : 'Ready',
+            ),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(56),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              textStyle: const TextStyle(
+                fontFamily: 'DMSans',
+                fontSize: 15.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 14),
+
+        const SizedBox(height: 16),
+
         Reveal(
-          delay: const Duration(milliseconds: 500),
+          delay: const Duration(milliseconds: 420),
           child: Text(
             'Just your name. It stays on this device.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'DMSans',
               fontSize: 12,
-              color: const Color(0xFF6F8A73),
+              color: scheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),
           ),
         ),
@@ -316,7 +338,6 @@ class _NameStep extends StatelessWidget {
   }
 }
 
-/// Step 2 — the oath, signed with the user's name.
 class _OathStep extends StatelessWidget {
   const _OathStep({
     super.key,
@@ -331,88 +352,87 @@ class _OathStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final scheme = Theme.of(context).colorScheme;
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Reveal(
           child: Text(
             'THE STUDY OATH',
             textAlign: TextAlign.center,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: const Color(0xFFA5D6A7),
+            style: TextStyle(
+              fontFamily: 'DMSans',
+              fontSize: 12.5,
+              color: scheme.primary,
               fontWeight: FontWeight.w700,
               letterSpacing: 3,
             ),
           ),
         ),
-        const SizedBox(height: 12),
+
+        const SizedBox(height: 14),
+
         Reveal(
-          delay: const Duration(milliseconds: 100),
+          delay: const Duration(milliseconds: 80),
           child: Text.rich(
             TextSpan(
               children: [
                 const TextSpan(text: 'I, '),
                 TextSpan(
                   text: name,
-                  style: const TextStyle(color: Color(0xFFFFC107)),
+                  style: TextStyle(color: scheme.tertiary),
                 ),
                 const TextSpan(text: ',\nswear on\nmy dream.'),
               ],
             ),
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'SpaceGrotesk',
-              fontSize: 40,
-              height: 1.05,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -1.2,
-              color: Color(0xFFF2F5F0),
+              fontSize: 38,
+              height: 1.08,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -1.1,
+              color: scheme.onSurface,
             ),
           ),
         ),
+
         const SizedBox(height: 10),
+
         Reveal(
-          delay: const Duration(milliseconds: 200),
+          delay: const Duration(milliseconds: 160),
           child: Text(
             'Before the white coat, there is this. '
             'One promise to the hardest-working version of you.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'DMSans',
-              fontSize: 14.5,
-              height: 1.5,
-              color: const Color(0xFF9CB09F),
+              fontSize: 15,
+              height: 1.6,
+              color: scheme.onSurfaceVariant,
             ),
           ),
         ),
-        const SizedBox(height: 26),
-        _BentoGrid(
-          pledges: pledges,
-          revealDelay: const Duration(milliseconds: 300),
-        ),
-        const SizedBox(height: 16),
+
+        const SizedBox(height: 28),
+
         Reveal(
-          delay: const Duration(milliseconds: 420),
-          child: Text(
-            'This I promise, $name — to yourself.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'DMSans',
-              fontSize: 13,
-              fontStyle: FontStyle.italic,
-              color: const Color(0xFF8FA993),
-            ),
-          ),
+          delay: const Duration(milliseconds: 220),
+          child: _PledgeList(pledges: pledges, scheme: scheme),
         ),
-        const SizedBox(height: 26),
+
+        const SizedBox(height: 28),
+
         Reveal(
-          delay: const Duration(milliseconds: 500),
+          delay: const Duration(milliseconds: 400),
           child: Center(child: _OathSealButton(onSealed: onSealed)),
         ),
-        const SizedBox(height: 14),
+
+        const SizedBox(height: 16),
+
         Reveal(
-          delay: const Duration(milliseconds: 600),
+          delay: const Duration(milliseconds: 480),
           child: Text(
             'TAP THE SEAL TO TAKE THE OATH',
             textAlign: TextAlign.center,
@@ -421,7 +441,7 @@ class _OathStep extends StatelessWidget {
               fontSize: 11,
               letterSpacing: 2.2,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF6F8A73),
+              color: scheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),
           ),
         ),
@@ -430,291 +450,79 @@ class _OathStep extends StatelessWidget {
   }
 }
 
-/// Fingerprint mark with a soft halo — the visual signature of the oath.
-class _FingerprintHero extends StatelessWidget {
-  const _FingerprintHero({
-    required this.size,
-    required this.iconSize,
-    required this.color,
-    required this.glow,
-  });
-
-  final double size;
-  final double iconSize;
-  final Color color;
-  final Color glow;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(
-          center: const Alignment(-0.25, -0.3),
-          colors: [glow.withValues(alpha: 0.85), const Color(0xFF0C1F11)],
-          stops: const [0, 1],
-        ),
-        border: Border.all(color: color.withValues(alpha: 0.30), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: glow.withValues(alpha: 0.35),
-            blurRadius: 36,
-            spreadRadius: 2,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.45),
-            offset: const Offset(0, 10),
-            blurRadius: 22,
-          ),
-        ],
-      ),
-      child: Center(
-        child: SvgPicture.asset(
-          'assets/svg/fingerprint.svg',
-          colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-          width: iconSize,
-          height: iconSize,
-        ),
-      ),
-    );
-  }
-}
-
-/// Skeuomorphic raised button: gradient face, top highlight, soft drop shadow.
-class _RaisedButton extends StatelessWidget {
-  const _RaisedButton({
-    required this.label,
-    required this.onTap,
-    this.icon,
-    this.enabled = true,
-  });
-
-  final String label;
-  final VoidCallback onTap;
-  final List<List<dynamic>>? icon;
-  final bool enabled;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedOpacity(
-      opacity: enabled ? 1 : 0.55,
-      duration: const Duration(milliseconds: 180),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: enabled ? onTap : null,
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            height: 56,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: enabled
-                    ? const [Color(0xFF3E9B46), Color(0xFF1F6B2E)]
-                    : const [Color(0xFF26352A), Color(0xFF1D281F)],
-              ),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.16),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF9BD39F).withValues(alpha: 0.10),
-                  offset: const Offset(-3, -3),
-                  blurRadius: 12,
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.40),
-                  offset: const Offset(0, 10),
-                  blurRadius: 20,
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontFamily: 'DMSans',
-                    fontSize: 15.5,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-                if (icon != null) ...[
-                  const SizedBox(width: 10),
-                  HugeIcon(icon: icon!, size: 20, color: Colors.white),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Bento-style grid of pledges: one wide card, two half cards, one wide card.
-class _BentoGrid extends StatelessWidget {
-  const _BentoGrid({required this.pledges, required this.revealDelay});
+class _PledgeList extends StatelessWidget {
+  const _PledgeList({required this.pledges, required this.scheme});
 
   final List<String> pledges;
-  final Duration revealDelay;
-
-  static const _accents = [
-    (icon: HugeIcons.strokeRoundedSun01, color: Color(0xFFFFC107)),
-    (icon: HugeIcons.strokeRoundedTimer01, color: Color(0xFF66BB6A)),
-    (icon: HugeIcons.strokeRoundedYoga01, color: Color(0xFFA5D6A7)),
-    (icon: HugeIcons.strokeRoundedBook02, color: Color(0xFF9BE0A1)),
-  ];
+  final ColorScheme scheme;
 
   @override
   Widget build(BuildContext context) {
+    final accents = [
+      Icons.wb_sunny_outlined,
+      Icons.timer_outlined,
+      Icons.self_improvement_outlined,
+      Icons.menu_book_outlined,
+    ];
+
+    final colors = [
+      scheme.tertiary,
+      scheme.primary,
+      const Color(0xFF60A5FA),
+      const Color(0xFFA78BFA),
+    ];
+
     return Column(
       children: [
-        _BentoRow(
-          revealDelay: revealDelay,
-          child: _BentoCard(
-            pledge: pledges[0],
-            accent: _accents[0],
-            wide: true,
+        for (int i = 0; i < pledges.length; i++)
+          Padding(
+            padding: EdgeInsets.only(bottom: i < pledges.length - 1 ? 10 : 0),
+            child: Reveal(
+              delay: Duration(milliseconds: 220 + i * 60),
+              child: Container(
+                height: 60,
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: scheme.outlineVariant, width: 1),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: colors[i].withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(accents[i], size: 17, color: colors[i]),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          pledges[i],
+                          style: TextStyle(
+                            fontFamily: 'DMSans',
+                            fontSize: 14.5,
+                            height: 1.4,
+                            fontWeight: FontWeight.w600,
+                            color: scheme.onSurface,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        _BentoRow(
-          revealDelay: revealDelay + const Duration(milliseconds: 80),
-          children: [
-            _BentoCard(pledge: pledges[1], accent: _accents[1], wide: false),
-            const SizedBox(width: 12),
-            _BentoCard(pledge: pledges[2], accent: _accents[2], wide: false),
-          ],
-        ),
-        const SizedBox(height: 12),
-        _BentoRow(
-          revealDelay: revealDelay + const Duration(milliseconds: 160),
-          child: _BentoCard(
-            pledge: pledges[3],
-            accent: _accents[3],
-            wide: true,
-          ),
-        ),
       ],
     );
   }
 }
 
-class _BentoRow extends StatelessWidget {
-  const _BentoRow({required this.revealDelay, this.children, this.child})
-    : assert((children == null) != (child == null));
-
-  final Duration revealDelay;
-  final List<Widget>? children;
-  final Widget? child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Reveal(
-      delay: revealDelay,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: children ?? [child!],
-      ),
-    );
-  }
-}
-
-/// A single bento cell with a neo-skeuomorphic face: soft light + dark
-/// shadows (neumorphic) and a beveled top highlight, with an accent chip.
-class _BentoCard extends StatelessWidget {
-  const _BentoCard({
-    required this.pledge,
-    required this.accent,
-    required this.wide,
-  });
-
-  final String pledge;
-  final ({List<List<dynamic>> icon, Color color}) accent;
-  final bool wide;
-
-  @override
-  Widget build(BuildContext context) {
-    final accentColor = accent.color;
-    return Expanded(
-      flex: wide ? 3 : 2,
-      child: Container(
-        constraints: BoxConstraints(minHeight: wide ? 84 : 96),
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 15),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.white.withValues(alpha: 0.085),
-              Colors.white.withValues(alpha: 0.018),
-            ],
-          ),
-          border: Border(
-            top: BorderSide(color: Colors.white.withValues(alpha: 0.16)),
-            right: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
-            bottom: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
-            left: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.white.withValues(alpha: 0.05),
-              offset: const Offset(-4, -4),
-              blurRadius: 12,
-            ),
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.35),
-              offset: const Offset(0, 8),
-              blurRadius: 20,
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: accentColor.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(11),
-                border: Border.all(color: accentColor.withValues(alpha: 0.25)),
-              ),
-              child: HugeIcon(icon: accent.icon, size: 18, color: accentColor),
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: Text(
-                pledge,
-                style: const TextStyle(
-                  fontFamily: 'DMSans',
-                  fontSize: 14.5,
-                  height: 1.4,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFFE4EAE2),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// A golden seal that fills over 1.2 s after a tap; completing the fill
-/// seals the oath. Uses a timer instead of hold-gesture callbacks to avoid
-/// triggering the Linux desktop mouse-tracker recursive-update assertion.
 class _OathSealButton extends StatefulWidget {
   const _OathSealButton({required this.onSealed});
 
@@ -732,6 +540,7 @@ class _OathSealButtonState extends State<_OathSealButton>
   );
 
   bool _sealed = false;
+  bool _pressing = false;
   async.Timer? _timer;
 
   @override
@@ -741,148 +550,127 @@ class _OathSealButtonState extends State<_OathSealButton>
     super.dispose();
   }
 
-  void _startTimer() {
+  void _pressStart() {
     if (_sealed) return;
+
     _timer?.cancel();
-    _progress.forward(from: 0);
-    _timer = async.Timer(const Duration(milliseconds: 1200), () {
-      if (!mounted) return;
-      setState(() => _sealed = true);
-      widget.onSealed();
-    });
+
+    setState(() => _pressing = true);
+
+    _progress.forward(from: _progress.value);
+
+    _timer = async.Timer(
+      Duration(milliseconds: (1200 * (1 - _progress.value)).round()),
+      () {
+        if (!mounted) return;
+
+        setState(() {
+          _sealed = true;
+          _pressing = false;
+        });
+
+        HapticFeedback.lightImpact();
+
+        Future.delayed(const Duration(milliseconds: 80), () {
+          if (!mounted) return;
+          widget.onSealed();
+        });
+      },
+    );
+  }
+
+  void _pressCancel() {
+    if (_sealed || !_pressing) return;
+
+    _timer?.cancel();
+
+    setState(() => _pressing = false);
+
+    _progress.reverse();
   }
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Semantics(
       button: true,
       label: 'Take the study oath',
-      hint: 'Tap the seal to take the oath',
-      child: InkWell(
-        onTap: _startTimer,
-        borderRadius: BorderRadius.circular(74),
+      hint: 'Tap and hold the seal to take the oath',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) => _pressStart(),
+        onTapUp: (_) => _pressCancel(),
+        onTapCancel: _pressCancel,
         child: AnimatedBuilder(
           animation: _progress,
           builder: (context, _) {
             final t = _progress.value;
+
             return SizedBox(
-              width: 148,
-              height: 148,
+              width: 120,
+              height: 120,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Bezel: neumorphic depth behind the ring.
-                  Container(
-                    width: 148,
-                    height: 148,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(
-                            0xFF9BD39F,
-                          ).withValues(alpha: 0.10),
-                          offset: const Offset(-5, -5),
-                          blurRadius: 16,
-                        ),
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.45),
-                          offset: const Offset(0, 12),
-                          blurRadius: 24,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Golden progress ring.
                   CustomPaint(
-                    size: const Size.square(148),
-                    painter: _SealPainter(progress: t, sealed: _sealed),
-                  ),
-                  // The disc: glossy radial face holding the fingerprint.
-                  Container(
-                    width: 110,
-                    height: 110,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        center: const Alignment(-0.3, -0.35),
-                        radius: 1.25,
-                        colors: _sealed
-                            ? const [Color(0xFF4CAF50), Color(0xFF1B5E20)]
-                            : [
-                                const Color(0xFF3E8E44).withValues(alpha: 0.55),
-                                const Color(0xFF1E5E28).withValues(alpha: 0.55),
-                              ],
-                      ),
-                      border: Border.all(
-                        color: const Color(0xFFA5D6A7).withValues(alpha: 0.55),
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.40),
-                          offset: const Offset(0, 6),
-                          blurRadius: 12,
-                        ),
-                        BoxShadow(
-                          color: Colors.white.withValues(alpha: 0.08),
-                          offset: const Offset(-3, -3),
-                          blurRadius: 8,
-                        ),
-                      ],
+                    size: const Size.square(120),
+                    painter: _SealPainter(
+                      progress: t,
+                      sealed: _sealed,
+                      scheme: scheme,
                     ),
-                    child: Center(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 320),
-                        transitionBuilder: (child, anim) =>
-                            ScaleTransition(scale: anim, child: child),
-                        child: _sealed
-                            ? const Icon(
-                                Icons.check_rounded,
-                                key: ValueKey('check'),
-                                color: Colors.white,
-                                size: 46,
-                              )
-                            : Padding(
-                                key: const ValueKey('fingerprint'),
-                                padding: const EdgeInsets.all(22),
-                                child: Transform.scale(
-                                  scale: 1 - 0.12 * t,
+                  ),
+                  AnimatedScale(
+                    scale: _pressing && !_sealed ? 0.92 : 1,
+                    duration: const Duration(milliseconds: 150),
+                    curve: Curves.easeOut,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      width: 88,
+                      height: 88,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _sealed
+                            ? scheme.primary
+                            : scheme.surfaceContainerHigh,
+                        border: Border.all(
+                          color: _sealed
+                              ? scheme.primary
+                              : scheme.outlineVariant,
+                          width: 1,
+                        ),
+                      ),
+                      child: Center(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 260),
+                          transitionBuilder: (child, anim) {
+                            return ScaleTransition(scale: anim, child: child);
+                          },
+                          child: _sealed
+                              ? Icon(
+                                  Icons.check_rounded,
+                                  key: const ValueKey('check'),
+                                  color: scheme.onPrimary,
+                                  size: 36,
+                                )
+                              : Padding(
+                                  key: const ValueKey('fingerprint'),
+                                  padding: const EdgeInsets.all(18),
                                   child: SvgPicture.asset(
                                     'assets/svg/fingerprint.svg',
-                                    colorFilter: const ColorFilter.mode(
-                                      Color(0xFFEAF5EC),
+                                    colorFilter: ColorFilter.mode(
+                                      scheme.primary,
                                       BlendMode.srcIn,
                                     ),
-                                    width: 44,
-                                    height: 44,
+                                    width: 32,
+                                    height: 32,
                                   ),
                                 ),
-                              ),
-                      ),
-                    ),
-                  ),
-                  // Growing glow as the seal fills.
-                  if (!_sealed && t > 0)
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(
-                                  0xFFFFC107,
-                                ).withValues(alpha: 0.28 * t),
-                                blurRadius: 18 + 26 * t,
-                                spreadRadius: 2 + 8 * t,
-                              ),
-                            ],
-                          ),
                         ),
                       ),
                     ),
+                  ),
                 ],
               ),
             );
@@ -894,30 +682,35 @@ class _OathSealButtonState extends State<_OathSealButton>
 }
 
 class _SealPainter extends CustomPainter {
-  const _SealPainter({required this.progress, required this.sealed});
+  const _SealPainter({
+    required this.progress,
+    required this.sealed,
+    required this.scheme,
+  });
 
   final double progress;
   final bool sealed;
+  final ColorScheme scheme;
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2 - 3;
 
-    // Track.
     final track = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.5
+      ..strokeWidth = 3
       ..strokeCap = StrokeCap.round
-      ..color = Colors.white.withValues(alpha: sealed ? 0.5 : 0.18);
+      ..color = scheme.outlineVariant;
+
     canvas.drawCircle(center, radius, track);
 
-    // Progress arc (golden, clockwise from the top).
     final fill = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.5
+      ..strokeWidth = 3
       ..strokeCap = StrokeCap.round
-      ..color = const Color(0xFFFFC107).withValues(alpha: sealed ? 1 : 0.9);
+      ..color = sealed ? scheme.primary : scheme.tertiary;
+
     if (sealed) {
       canvas.drawCircle(center, radius, fill);
     } else if (progress > 0) {
