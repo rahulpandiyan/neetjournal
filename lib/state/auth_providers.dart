@@ -1,15 +1,15 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/services/app_user.dart';
 import '../core/services/auth_service.dart';
 import '../core/services/sync_service.dart';
 import '../firebase_options.dart';
 import 'providers.dart';
 
 /// Initializes Firebase once. Returns `null` when Firebase is unavailable
-/// (e.g. firebase_options.dart not configured yet) so the app can still run
-/// locally without auth/cloud sync.
+/// (e.g. firebase_options.dart not configured, or Linux/Windows where
+/// FlutterFire has no implementation) so the app can still run locally.
 final firebaseAppProvider = FutureProvider<FirebaseApp?>((ref) async {
   try {
     return await Firebase.initializeApp(
@@ -20,17 +20,25 @@ final firebaseAppProvider = FutureProvider<FirebaseApp?>((ref) async {
   }
 });
 
-/// Only meaningful once [firebaseAppProvider] has resolved to non-null.
-final authServiceProvider = Provider<AuthService>(
-  (ref) => AuthService(FirebaseAuth.instance),
-);
+/// Backed by the native Firebase plugins on mobile/web/macOS and by the
+/// Firebase Auth REST API on Linux/Windows. See [AuthService.create].
+final authServiceProvider = Provider<AuthService>((ref) {
+  final service = AuthService.create();
+  ref.onDispose(service.dispose);
+  return service;
+});
 
-final authStateProvider = StreamProvider<User?>((ref) {
+final authStateProvider = StreamProvider<AppUser?>((ref) {
   return ref.watch(authServiceProvider).authStateChanges;
 });
 
 final syncServiceProvider = Provider<SyncService>((ref) {
-  final service = SyncService(ref.watch(databaseProvider));
+  print('[studyn-sync] provider: creating SyncService');
+  final service = SyncService(
+    ref.watch(databaseProvider),
+    projectId: DefaultFirebaseOptions.currentPlatform.projectId,
+    idToken: () => ref.read(authServiceProvider).getIdToken(),
+  );
   ref.onDispose(service.dispose);
   return service;
 });
@@ -40,6 +48,7 @@ final activeSyncProvider = StreamProvider.family<SyncStatus, String>((
   ref,
   uid,
 ) {
+  print('[studyn-sync] provider: activeSyncProvider(uid=$uid)');
   return ref.watch(syncServiceProvider).run(uid);
 });
 

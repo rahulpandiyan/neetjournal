@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/services/sync_service.dart';
+import '../../../state/auth_providers.dart';
 import '../../../state/providers.dart';
+import '../../auth/login_screen.dart';
 import '../../widgets/widgets.dart';
 import 'note_screen.dart';
 
@@ -25,6 +29,16 @@ class SettingsScreen extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 6, 20, 32),
                 children: [
+                  const Reveal(
+                    child: SoftCard(
+                      padding: EdgeInsets.zero,
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        children: [_ProfileTile(), Divider(), _SignOutTile()],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   const Reveal(
                     child: SoftCard(
                       padding: EdgeInsets.symmetric(vertical: 4),
@@ -78,6 +92,15 @@ class SettingsScreen extends ConsumerWidget {
                           );
                         },
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Reveal(
+                    delay: const Duration(milliseconds: 160),
+                    child: const SoftCard(
+                      padding: EdgeInsets.zero,
+                      clipBehavior: Clip.antiAlias,
+                      child: _CloudSyncTile(),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -521,4 +544,203 @@ class _NotificationsTile extends ConsumerWidget {
       },
     );
   }
+}
+
+/// Profile card: display name (tap to edit) + signed-in email.
+class _ProfileTile extends ConsumerWidget {
+  const _ProfileTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final nameAsync = ref.watch(profileNameProvider);
+    final user = ref.watch(authStateProvider).valueOrNull;
+    final name = nameAsync.valueOrNull ?? '';
+    return ListTile(
+      leading: IconBubble(
+        icon: HugeIcons.strokeRoundedUserCircle,
+        color: theme.colorScheme.primary,
+        iconColor: Colors.white,
+        size: 40,
+        radius: 14,
+        iconSize: 22,
+      ),
+      title: Text(
+        name.isEmpty ? 'Add your name' : name,
+        style: const TextStyle(fontWeight: FontWeight.w700),
+      ),
+      subtitle: Text(
+        user?.email ?? (user != null ? 'Signed in' : 'Not signed in'),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontSize: 13),
+      ),
+      trailing: const HugeIcon(icon: HugeIcons.strokeRoundedEdit01),
+      onTap: () => _editName(context, ref),
+    );
+  }
+
+  Future<void> _editName(BuildContext context, WidgetRef ref) async {
+    final current = ref.read(profileNameProvider).valueOrNull ?? '';
+    final controller = TextEditingController(text: current);
+    final saved = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Your name'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          maxLength: 30,
+          decoration: const InputDecoration(
+            labelText: 'Name',
+            hintText: 'e.g. Rahul',
+          ),
+          onSubmitted: (v) => Navigator.of(ctx).pop(v.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (saved != null && saved.isNotEmpty) {
+      await ref
+          .read(settingsRepositoryProvider)
+          .setSetting('profileName', saved);
+    }
+  }
+}
+
+/// Sign-out entry with confirmation, then back to the login screen.
+class _SignOutTile extends ConsumerWidget {
+  const _SignOutTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final signedIn = ref.watch(authStateProvider).valueOrNull != null;
+    return ListTile(
+      enabled: signedIn,
+      leading: IconBubble(
+        icon: HugeIcons.strokeRoundedLogout03,
+        color: theme.colorScheme.errorContainer,
+        iconColor: theme.colorScheme.onErrorContainer,
+        size: 34,
+        radius: 12,
+        iconSize: 18,
+      ),
+      title: Text(
+        'Sign out',
+        style: TextStyle(
+          fontWeight: FontWeight.w700,
+          color: signedIn ? theme.colorScheme.error : theme.disabledColor,
+        ),
+      ),
+      subtitle: const Text('Log out of this device'),
+      onTap: () => _confirmSignOut(context, ref),
+    );
+  }
+
+  Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sign out?'),
+        content: const Text('Your local study data stays on this device.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+              foregroundColor: Theme.of(ctx).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Sign out'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await ref.read(authServiceProvider).signOut();
+    if (!context.mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+}
+
+/// Cloud sync status (per signed-in user).
+class _CloudSyncTile extends ConsumerWidget {
+  const _CloudSyncTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final uid = ref.watch(authStateProvider).valueOrNull?.uid;
+    if (uid == null) {
+      return const ListTile(
+        leading: HugeIcon(icon: HugeIcons.strokeRoundedCloudOff),
+        title: Text('Cloud sync'),
+        subtitle: Text('Sign in to sync across devices'),
+      );
+    }
+    final sync = ref.watch(activeSyncProvider(uid));
+    final errorReason = sync.hasError ? _friendlySyncError(sync.error) : null;
+    final status = sync.hasError
+        ? SyncStatus.error
+        : (sync.valueOrNull ?? SyncStatus.idle);
+    final (label, color) = switch (status) {
+      SyncStatus.pulling => ('Pulling latest data…', theme.colorScheme.primary),
+      SyncStatus.pushing => ('Uploading changes…', theme.colorScheme.primary),
+      SyncStatus.error => (
+        errorReason ?? 'Not connected',
+        theme.colorScheme.error,
+      ),
+      SyncStatus.idle => (
+        'Everything is up to date',
+        theme.colorScheme.tertiary,
+      ),
+    };
+    return ListTile(
+      leading: IconBubble(
+        icon: status == SyncStatus.error
+            ? HugeIcons.strokeRoundedCloudOff
+            : HugeIcons.strokeRoundedCloudSavingDone01,
+        color: status == SyncStatus.error
+            ? theme.colorScheme.errorContainer
+            : theme.colorScheme.primaryContainer,
+        iconColor: status == SyncStatus.error
+            ? theme.colorScheme.onErrorContainer
+            : theme.colorScheme.onPrimaryContainer,
+        size: 34,
+        radius: 12,
+        iconSize: 18,
+      ),
+      title: const Text('Cloud sync'),
+      subtitle: Text(label, style: TextStyle(color: color)),
+    );
+  }
+}
+
+/// Maps a raw sync error into something a user can read. Desktop platforms
+/// have no Firestore implementation, so they land here with a platform error.
+String _friendlySyncError(Object? error) {
+  if (error is MissingPluginException) {
+    return 'Not available on this device';
+  }
+  final msg = error?.toString() ?? '';
+  final clean = msg.split('\n').first.trim();
+  return clean.isEmpty ? 'Not connected' : clean;
 }

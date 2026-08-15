@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/data/motivations.dart';
 import '../core/db/database.dart';
 import '../core/db/tables.dart';
 import '../core/services/notifications_service.dart';
@@ -105,6 +106,39 @@ final stretchReminderProvider = StreamProvider<({bool enabled, int minutes})>((
   ref,
 ) {
   return ref.watch(settingsRepositoryProvider).watchStretchReminder();
+});
+
+/// The user's display name (set in Settings). Empty when never set.
+///
+/// Backed by the table-update signal (as `dbTickStream` is) rather than a
+/// Drift `.watch()` query stream: Drift keeps a cache-removal timer for query
+/// streams that never fires under the fake async of widget tests, which
+/// deadlocks `AppDatabase.close()` there.
+final profileNameProvider = StreamProvider<String>((ref) {
+  final db = ref.watch(databaseProvider);
+  return Stream<String>.multi((controller) {
+    var closed = false;
+    Future<void> emit() async {
+      if (closed) return;
+      final value = (await db.getSetting('profileName')) ?? '';
+      if (closed) return;
+      controller.add(value.trim());
+    }
+
+    unawaited(emit());
+    final sub = db
+        .tableUpdates(TableUpdateQuery.onTable(db.appSettings))
+        .listen((_) => emit());
+    controller.onCancel = () {
+      closed = true;
+      sub.cancel();
+    };
+  });
+});
+
+/// The motivational line for today, rotated by calendar day.
+final dailyMotivationProvider = Provider<Motivation>((ref) {
+  return Motivations.daily(DateTime.now());
 });
 
 final templateByDayProvider = StreamProvider<Map<int, List<TimetableSlot>>>((

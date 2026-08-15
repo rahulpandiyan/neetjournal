@@ -1,0 +1,12 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Cross-device sync: each signed-in user owns the whole `users/<uid>`
+    // subtree (the app stores the full DB snapshot at users/<uid>/state).
+    // No one else may read or write another user's data.
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

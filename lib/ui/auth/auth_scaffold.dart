@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 /// Shared chrome for the login / signup screens: brand header on a soft
 /// gradient, then the form content in a scrollable column.
@@ -92,108 +91,6 @@ class AuthScaffold extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The Google "G" icon from the SVG drawable.
-class GoogleG extends StatelessWidget {
-  const GoogleG({super.key, this.size = 22});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    // Match the text color for consistency
-    final iconColor = isDark ? Colors.white : const Color(0xFF1F2937);
-
-    return SvgPicture.asset(
-      'assets/svg/google_logo.svg',
-      width: size,
-      height: size,
-      colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
-    );
-  }
-}
-
-/// Modern bento-style Google sign-in button with skeletonism design.
-/// Clean card, soft shadows, and sleek typography.
-class GoogleSignInButton extends StatelessWidget {
-  const GoogleSignInButton({
-    super.key,
-    required this.onPressed,
-    this.label = 'Continue with Google',
-    this.loading = false,
-  });
-
-  final VoidCallback? onPressed;
-  final String label;
-  final bool loading;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return GestureDetector(
-      onTap: loading ? null : onPressed,
-      child: Container(
-        height: 56,
-        decoration: BoxDecoration(
-          color: isDark
-              ? const Color(0xFF2A2D27)
-              : const Color(0xFFFDFDFD),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isDark
-                ? const Color(0xFF3D4237).withValues(alpha: 0.8)
-                : const Color(0xFFE8EBE6),
-            width: 1,
-          ),
-          boxShadow: [
-            // Soft inner highlight
-            BoxShadow(
-              color: Colors.white.withValues(alpha: isDark ? 0.02 : 0.9),
-              offset: const Offset(-2, -2),
-              blurRadius: 8,
-            ),
-            // Soft outer shadow
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
-              offset: const Offset(2, 4),
-              blurRadius: 16,
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (loading)
-              const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Color(0xFF4285F4),
-                ),
-              )
-            else
-              const GoogleG(size: 22),
-            const SizedBox(width: 12),
-            Text(
-              label,
-              style: theme.textTheme.labelLarge?.copyWith(
-                fontFamily: 'DMSans',
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white : const Color(0xFF1F2937),
-                letterSpacing: 0.1,
-              ),
-            ),
-          ],
         ),
       ),
     );

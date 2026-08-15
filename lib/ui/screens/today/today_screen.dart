@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/data/motivations.dart';
 import '../../../core/db/database.dart';
 import '../../../core/db/tables.dart';
 import '../../../core/utils/dates.dart';
@@ -19,6 +20,8 @@ class TodayScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dataAsync = ref.watch(todayProvider);
+    final name = ref.watch(profileNameProvider).valueOrNull ?? '';
+    final motivation = ref.watch(dailyMotivationProvider);
 
     return Scaffold(
       body: dataAsync.when(
@@ -35,7 +38,9 @@ class TodayScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ScreenHeader(
-                  title: '${greetingFor(data.now)} 👋',
+                  title: name.isEmpty
+                      ? '${greetingFor(data.now)} 👋'
+                      : '${greetingFor(data.now)}, $name 👋',
                   subtitle: DateFormat('EEEE, d MMMM').format(data.now),
                 ),
                 Expanded(
@@ -43,6 +48,8 @@ class TodayScreen extends ConsumerWidget {
                     padding: const EdgeInsets.fromLTRB(20, 6, 20, 32),
                     children: [
                       CountdownCard(daysLeft: data.daysLeft),
+                      const SizedBox(height: 16),
+                      _MotivationCard(line: motivation),
                       const SizedBox(height: 16),
                       if (nextSlot != null) ...[
                         IntrinsicHeight(
@@ -126,6 +133,60 @@ class TodayScreen extends ConsumerWidget {
               s.endMin <= nowMin,
         )
         .toList();
+  }
+}
+
+/// Today's rotating motivational line.
+class _MotivationCard extends StatelessWidget {
+  const _MotivationCard({required this.line});
+
+  final Motivation line;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Reveal(
+      child: SoftCard(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            IconBubble(
+              icon: HugeIcons.strokeRoundedQuotes,
+              size: 34,
+              radius: 12,
+              iconSize: 18,
+              color: scheme.tertiaryContainer,
+              iconColor: scheme.onTertiaryContainer,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '"${line.text}"',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontStyle: FontStyle.italic,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '— ${line.author}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

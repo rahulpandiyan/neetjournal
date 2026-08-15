@@ -7,6 +7,7 @@ import 'package:heroicons/heroicons.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../core/data/motivations.dart';
 import '../../core/db/tables.dart';
 import '../../state/focus_controller.dart';
 import '../../state/providers.dart';
@@ -32,9 +33,14 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
   /// Key of the stretch/eye-break reminder already shown, same semantics.
   String? _lastStretchKey;
 
+  /// The motivational line for this session, picked once when the screen
+  /// opens so each focus session shows a fresh one.
+  late final Motivation _sessionQuote;
+
   @override
   void initState() {
     super.initState();
+    _sessionQuote = Motivations.nextForSession();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _syncWakelock(ref.read(focusControllerProvider).phase);
     });
@@ -787,11 +793,32 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
             label: const Text("I'm tired"),
           ),
           const SizedBox(height: 8),
-          Text(
-            paused ? 'Paused. Come back when you are ready.' : 'Stay focused.',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: FocusPalette.textDim, fontSize: 13),
-          ),
+          if (paused)
+            Text(
+              'Paused. Come back when you are ready.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: FocusPalette.textDim, fontSize: 13),
+            )
+          else ...[
+            Text(
+              '"${_sessionQuote.text}"',
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: FocusPalette.textDim,
+                fontSize: 13,
+                fontStyle: FontStyle.italic,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '— ${_sessionQuote.author}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: FocusPalette.textDim, fontSize: 12),
+            ),
+          ],
         ],
       );
     }

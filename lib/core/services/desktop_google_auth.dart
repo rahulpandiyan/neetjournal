@@ -17,10 +17,7 @@ import 'package:window_to_front/window_to_front.dart';
 /// code is exchanged for an ID token that Firebase accepts.
 /// See https://developers.google.com/identity/protocols/oauth2/native-app
 class DesktopGoogleAuth {
-  const DesktopGoogleAuth({
-    required this.clientId,
-    required this.clientSecret,
-  });
+  const DesktopGoogleAuth({required this.clientId, required this.clientSecret});
 
   /// The "Web application" OAuth client Firebase auto-created for this
   /// project (client_type 3 in google-services.json).
@@ -38,10 +35,12 @@ class DesktopGoogleAuth {
 
   static const Duration _authTimeout = Duration(minutes: 5);
 
-  static final Uri _authorizationEndpoint =
-      Uri.parse('https://accounts.google.com/o/oauth2/v2/auth');
-  static final Uri _tokenEndpoint =
-      Uri.parse('https://oauth2.googleapis.com/token');
+  static final Uri _authorizationEndpoint = Uri.parse(
+    'https://accounts.google.com/o/oauth2/v2/auth',
+  );
+  static final Uri _tokenEndpoint = Uri.parse(
+    'https://oauth2.googleapis.com/token',
+  );
 
   Uri get _redirectUri => Uri.parse('http://localhost:$redirectPort');
 
@@ -65,14 +64,16 @@ class DesktopGoogleAuth {
   /// returns the Google tokens for the signed-in account.
   Future<GoogleTokenResult> signIn() async {
     final state = _randomState();
-    final authUrl = _authorizationEndpoint.replace(queryParameters: {
-      'client_id': clientId,
-      'redirect_uri': _redirectUri.toString(),
-      'response_type': 'code',
-      'scope': 'openid email profile',
-      'state': state,
-      'prompt': 'select_account',
-    });
+    final authUrl = _authorizationEndpoint.replace(
+      queryParameters: {
+        'client_id': clientId,
+        'redirect_uri': _redirectUri.toString(),
+        'response_type': 'code',
+        'scope': 'openid email profile',
+        'state': state,
+        'prompt': 'select_account',
+      },
+    );
 
     String? code;
     try {
@@ -85,7 +86,8 @@ class DesktopGoogleAuth {
     } on SocketException {
       throw FirebaseAuthException(
         code: 'desktop-auth-failed',
-        message: 'Could not start the local sign-in server '
+        message:
+            'Could not start the local sign-in server '
             '(port $redirectPort is in use). Close any app using it and retry.',
       );
     }
