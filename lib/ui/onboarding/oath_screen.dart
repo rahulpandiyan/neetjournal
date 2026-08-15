@@ -70,14 +70,22 @@ class _OathScreenState extends ConsumerState<OathScreen> {
     if (_name.isNotEmpty) await repo.setSetting('profileName', _name);
     await repo.setSetting('oathTaken', '1');
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (_, animation, secondary) => const HomeShell(),
-        transitionsBuilder: (_, animation, secondary, child) =>
-            FadeTransition(opacity: animation, child: child),
-        transitionDuration: const Duration(milliseconds: 450),
-      ),
-    );
+    // Defer navigation until after the current pointer-event batch completes.
+    // Calling pushReplacement directly from the animation status listener can
+    // trigger a frame callback mid-pointer, which on Linux desktop causes the
+    // MouseTracker to recurse into _deviceUpdatePhase (assertion failure).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder: (_, animation, secondary) => const HomeShell(),
+            transitionsBuilder: (_, animation, secondary, child) =>
+                FadeTransition(opacity: animation, child: child),
+            transitionDuration: const Duration(milliseconds: 450),
+          ),
+        );
+      }
+    });
   }
 
   @override
@@ -712,7 +720,16 @@ class _OathSealButtonState extends State<_OathSealButton>
       )..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
           setState(() => _sealed = true);
-          widget.onSealed();
+          // Defer the parent callback to the post-frame phase so that any
+          // ongoing pointer-event handling (and the mouse-tracker's
+          // _deviceUpdatePhase) has fully finished. Without this, calling
+          // pushReplacement synchronously from the status listener triggers a
+          // rebuild that re-enters the mouse tracker during the same frame,
+          // which on Linux desktop hits the '!_debugDuringDeviceUpdate'
+          // assertion and crashes.
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) widget.onSealed();
+          });
         }
       });
 
