@@ -1,9 +1,13 @@
 /// A single motivational line with attribution.
 class Motivation {
-  const Motivation(this.text, this.author);
+  const Motivation(this.text, this.author, {this.source});
 
   final String text;
   final String author;
+
+  /// Optional origin label (e.g. `'zenquotes'`) shown as a small credit when
+  /// the line came from a remote service instead of the local list.
+  final String? source;
 }
 
 /// Curated motivational lines for study, discipline and exam prep.

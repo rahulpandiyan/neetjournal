@@ -21,7 +21,9 @@ class TodayScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dataAsync = ref.watch(todayProvider);
     final name = ref.watch(profileNameProvider).valueOrNull ?? '';
-    final motivation = ref.watch(dailyMotivationProvider);
+    final motivation =
+        ref.watch(dailyMotivationProvider).valueOrNull ??
+        Motivations.daily(DateTime.now());
 
     return Scaffold(
       body: dataAsync.when(
@@ -180,6 +182,15 @@ class _MotivationCard extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                  if (line.source != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      'via ZenQuotes',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: scheme.outline,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

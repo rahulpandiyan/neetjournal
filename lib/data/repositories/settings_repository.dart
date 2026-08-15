@@ -131,6 +131,8 @@ class SettingsRepository {
         .map((row) => row?.value);
   }
 
+  Future<String?> getSetting(String key) => _db.getSetting(key);
+
   Future<void> setSetting(String key, String value) =>
       _db.setSetting(key, value);
 

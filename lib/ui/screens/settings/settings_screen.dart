@@ -33,9 +33,7 @@ class SettingsScreen extends ConsumerWidget {
                     child: SoftCard(
                       padding: EdgeInsets.zero,
                       clipBehavior: Clip.antiAlias,
-                      child: Column(
-                        children: [_ProfileTile(), Divider(), _SignOutTile()],
-                      ),
+                      child: _ProfileTile(),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -105,7 +103,16 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24),
                   Reveal(
-                    delay: const Duration(milliseconds: 200),
+                    delay: const Duration(milliseconds: 180),
+                    child: const SoftCard(
+                      padding: EdgeInsets.zero,
+                      clipBehavior: Clip.antiAlias,
+                      child: _SignOutTile(),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Reveal(
+                    delay: const Duration(milliseconds: 220),
                     child: Column(
                       children: [
                         Row(

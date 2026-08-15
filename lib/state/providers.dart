@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/data/motivations.dart';
 import '../core/db/database.dart';
 import '../core/db/tables.dart';
+import '../core/services/motivation_service.dart';
 import '../core/services/notifications_service.dart';
 import '../core/utils/dates.dart';
 import '../data/repositories/journal_repository.dart';
@@ -136,9 +137,16 @@ final profileNameProvider = StreamProvider<String>((ref) {
   });
 });
 
-/// The motivational line for today, rotated by calendar day.
-final dailyMotivationProvider = Provider<Motivation>((ref) {
-  return Motivations.daily(DateTime.now());
+/// Fetches the daily motivational line (ZenQuotes, cached per day) with a
+/// local curated fallback.
+final motivationServiceProvider = Provider<MotivationService>((ref) {
+  return MotivationService(ref.watch(settingsRepositoryProvider));
+});
+
+/// The motivational line for today: quote of the day from ZenQuotes when
+/// reachable, otherwise the curated local rotation.
+final dailyMotivationProvider = FutureProvider<Motivation>((ref) {
+  return ref.watch(motivationServiceProvider).daily();
 });
 
 final templateByDayProvider = StreamProvider<Map<int, List<TimetableSlot>>>((
